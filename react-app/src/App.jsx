@@ -86,6 +86,13 @@ const AREA_COLORS = {
 // ─── CATEGORY LABELS ─────────────────────────────────────────────────
 const CATEGORY_LABELS = {
   "tutte": "Tutte",
+  "santa_sede": "Santa Sede",
+  "diritto_canonico": "Dir. Canonico",
+  "stato_chiese": "Stato e Chiese",
+  "chiesa_italia": "Chiesa Italia",
+  "confessioni_acattoliche": "Confessioni",
+  "liberta_religiosa": "Libertà religiosa",
+  "religioni_mondo": "Religioni Mondo",
   "penale": "Penale", "diritto_penale": "Penale", "gn_penale": "Penale",
   "civile": "Civile", "diritto_civile": "Civile", "gn_diritto": "Civile",
   "lavoro": "Lavoro", "diritto_lavoro": "Lavoro", "gn_lavoro": "Lavoro",
@@ -7800,11 +7807,11 @@ function SidebarNav({ activeTab, setActiveTab }) {
       {/* Logo desktop */}
       <div onClick={() => setActiveTab("notizie")} style={{ padding:"24px 16px", borderBottom:"1px solid var(--eg-border)", textAlign:"center", cursor:"pointer" }}>
         <div style={{ width:56, height:56, borderRadius:"50%", background:"#1a5fb4", border:"2px solid #C8A84E", display:"flex", alignItems:"center", justifyContent:"center", margin:"0 auto 10px" }}>
-          <span style={{ color:"#fff", fontWeight:800, fontSize:22, letterSpacing:"-0.5px", userSelect:"none" }}>EG</span>
+          <span style={{ color:"#fff", fontWeight:800, fontSize:22, letterSpacing:"-0.5px", userSelect:"none" }}>EE</span>
         </div>
-        <h1 style={{ fontSize:22, fontWeight:800, color:"var(--eg-text)", letterSpacing:"2px", lineHeight:1.2, margin:0 }}>EDICOLA <span style={{ color:"var(--eg-accent)" }}>GIURIDICA</span></h1>
+        <h1 style={{ fontSize:22, fontWeight:800, color:"var(--eg-text)", letterSpacing:"2px", lineHeight:1.2, margin:0 }}>EDICOLA <span style={{ color:"var(--eg-accent)" }}>ECCLESIASTICA</span></h1>
         <div style={{ fontSize:11, color:"var(--eg-text-dim)", fontWeight:600, letterSpacing:"1.5px", textTransform:"uppercase", marginTop:6 }}>
-          Notizie scalabili · Codici viventi
+          Diritto canonico · Vaticano · Stato e Chiese
         </div>
       </div>
       {/* Nav items */}
@@ -8479,7 +8486,7 @@ export default function EdicolaGiuridica() {
                 <circle cx="50" cy="50" r="42" fill="none" stroke="#ffffff" strokeWidth="2"/>
                 <text x="50" y="63" textAnchor="middle" fontFamily="Arial,sans-serif" fontWeight="900" fontSize="36" fill="#ffffff" letterSpacing="-1">EG</text>
               </svg>
-              <div style={{ fontSize:13, fontWeight:800, color:"var(--eg-text)", lineHeight:1.1 }}>EDICOLA<br/><span style={{ color:"var(--eg-accent)" }}>GIURIDICA</span></div>
+              <div style={{ fontSize:13, fontWeight:800, color:"var(--eg-text)", lineHeight:1.1 }}>EDICOLA<br/><span style={{ color:"var(--eg-accent)" }}>ECCLESIASTICA</span></div>
             </div>
           </div>
           {/* Nav sezioni — orizzontale nell'header, solo desktop (>768px via CSS) */}

@@ -487,126 +487,47 @@ function generateWeeklyHTML(trending, sentenze, contrasti, totNotizie) {
 
 // ── Classificazione articoli per area giuridica ────────────
 function classifyArticle(article) {
+  // Classificatore ecclesiastico: aree = santa_sede, diritto_canonico,
+  // stato_chiese, chiesa_italia, confessioni_acattoliche, liberta_religiosa,
+  // religioni_mondo. La categoria del feed è già una di queste; le parole
+  // chiave del titolo fanno override per i feed generalisti (Google News).
   const cat = (article.category || '').toLowerCase();
-  // OVERRIDE: titolo batte categoria feed (gestisce feed mal categorizzati)
-  const tl = (article.title || '').toLowerCase();
-  if (tl.includes('licenziamento') || tl.includes('ccnl') || tl.includes('retribuzione') || tl.includes('demansionamento') || tl.includes('mobbing')) return 'lavoro';
-  if (tl.includes('corte costituzionale') || tl.includes('incostituzion') || tl.includes('referendum') || tl.includes('separazione carriere')) return 'costituzionale';
-  if (tl.includes('divorzio') || tl.includes('assegno divorzile') || (tl.includes('affidamento') && tl.includes('figl'))) return 'famiglia';
-  if (tl.includes('privacy') || tl.includes('gdpr') || tl.includes('data breach')) return 'privacy';
+  const t = ((article.title || '') + ' ' + (article.desc || article.description || '')).toLowerCase();
 
-  if (cat === 'gn_penale' || cat === 'diritto_penale') return 'penale';
-  if (cat === 'diritto_lavoro' || cat === 'gn_lavoro') return 'lavoro';
-  if (cat === 'diritto_tributario') return 'tributario';
-  if (cat === 'diritto_amministrativo') return 'amministrativo';
-  if (cat === 'diritto_privacy' || cat === 'privacy') return 'privacy';
-  if (cat === 'diritto_bancario') return 'bancario';
-  if (cat === 'gn_famiglia' || cat === 'diritto_famiglia') return 'famiglia';
-  if (cat === 'eu_normativa' || cat === 'eu_giurisprudenza' || cat === 'eu_legislazione' || cat === 'diritto_comunitario') return 'eu';
-  if (cat === 'diritto_civile') return 'civile';
-  if (cat.includes('istituzionale_fisco')) return 'tributario';
-  if (cat.includes('istituzionale_privacy')) return 'privacy';
-  if (cat.includes('istituzionale_antitrust')) return 'amministrativo';
-  if (cat.includes('istituzionale_corte_cost')) return 'costituzionale';
-  if (cat.includes('istituzionale_cds')) return 'amministrativo';
-  if (cat.includes('gn_bancar') || cat.includes('gn_vigilanza') || cat.includes('gn_adr')) return 'bancario';
-  if (cat.includes('gn_costituzional')) return 'costituzionale';
-  if (cat.includes('gn_immigra')) return 'immigrazione';
-  if (cat.includes('gn_ambient')) return 'ambientale';
-  if (cat.includes('eu_') || cat.includes('gn_diritto_eu')) return 'eu';
-  if (cat.includes('gn_amministrativ')) return 'amministrativo';
-  if (cat.includes('gn_tributar') || cat.includes('gn_fisco')) return 'tributario';
+  // OVERRIDE dal contenuto: temi giuridici specifici battono la categoria feed
+  if (t.includes('diritto canonico') || t.includes('rota romana') || t.includes('tribunale ecclesiastico') ||
+      t.includes('nullità matrimonial') || t.includes('matrimonio canonico') || t.includes('canon law') ||
+      t.includes('segnatura apostolica') || t.includes('motu proprio') || t.includes('codice di diritto canonico'))
+    return 'diritto_canonico';
+  if (t.includes('8 per mille') || t.includes('otto per mille') || t.includes('concordato') ||
+      t.includes('intesa') && (t.includes('confession') || t.includes('religios')) ||
+      t.includes('ente ecclesiastico') || t.includes('enti ecclesiastici') || t.includes('matrimonio concordatario') ||
+      t.includes('ora di religione') || t.includes('edifici di culto') || t.includes('ministro di culto') ||
+      t.includes('imu') && t.includes('chies'))
+    return 'stato_chiese';
+  if (t.includes('libertà religiosa') || t.includes('libertà di culto') || t.includes('religious freedom') ||
+      t.includes('religious liberty') || t.includes('persecuzion') && t.includes('cristian') ||
+      t.includes('blasfemia') || t.includes('blasphemy') || t.includes('laicità') || t.includes('crocifisso'))
+    return 'liberta_religiosa';
+  if (t.includes('islam') || t.includes('moschea') || t.includes('imam') || t.includes('ucoii') ||
+      t.includes('ebraismo') || t.includes('sinagoga') || t.includes('comunità ebraica') || t.includes('rabbino') ||
+      t.includes('valdes') || t.includes('battist') && t.includes('chies') || t.includes('luteran') ||
+      t.includes('ortodoss') || t.includes('buddhis') || t.includes('induis') || t.includes('soka gakkai') ||
+      t.includes('avventist') || t.includes('pentecostal') || t.includes('testimoni di geova'))
+    return 'confessioni_acattoliche';
+  if (t.includes('papa ') || t.startsWith('papa') || t.includes('pontefice') || t.includes('santa sede') ||
+      t.includes('vaticano') || t.includes('curia romana') || t.includes('conclave') || t.includes('nunzio') ||
+      t.includes('angelus') || t.includes('udienza generale') || t.includes('concistoro') || t.includes('dicastero'))
+    return 'santa_sede';
+  if (t.includes('cei') || t.includes('conferenza episcopale') || t.includes('diocesi') ||
+      t.includes('vescov') || t.includes('parrocchi') || t.includes('oratorio'))
+    return 'chiesa_italia';
 
-  const t = ((article.title || '') + ' ' + (article.desc || '')).toLowerCase();
+  // Categoria del feed (già ecclesiastica)
+  if (['santa_sede','diritto_canonico','stato_chiese','chiesa_italia',
+       'confessioni_acattoliche','liberta_religiosa','religioni_mondo'].includes(cat)) return cat;
 
-  if (t.includes('penal') || t.includes('reato') || t.includes('imputat') ||
-      (t.includes('condann') && !t.includes('condanna civile')) ||
-      t.includes('assol') || t.includes('procura della repubblica') ||
-      t.includes('arresto') || t.includes('carcere') || t.includes('detenu') ||
-      t.includes('omicidio') || t.includes('truffa') || t.includes('stalking') ||
-      t.includes('maltrattament') || (t.includes('violenza') && !t.includes('violenza economica')) ||
-      t.includes('stupefacent') || t.includes('corruzione') || t.includes('peculato') ||
-      t.includes("abuso d'ufficio") || t.includes('concussion') ||
-      t.includes('612-bis') || t.includes('art. 73 ') ||
-      (t.includes('c.p.') && !t.includes('c.p.c.') && !t.includes('c.p.p.')))
-    return 'penale';
-
-  if (t.includes('tribut') || t.includes('fiscal') || t.includes('imposta') ||
-      t.includes('iva ') || t.includes('irpef') || t.includes('ires') || t.includes('irap') ||
-      t.includes('accis') || t.includes('agenzia delle entrate') ||
-      (t.includes('entrate') && t.includes('agenzia')) ||
-      t.includes('rottamazione') || t.includes('cartella esattoriale') ||
-      t.includes('riscossione') || t.includes('evasion') ||
-      t.includes('fisco') || t.includes('contribuent'))
-    return 'tributario';
-
-  if (t.includes('licenziamento') || t.includes('ccnl') || t.includes('sindac') ||
-      t.includes('retribuzione') || t.includes('stipendio') || t.includes('inps') ||
-      (t.includes('pensione') && !t.includes('pensione alimentare')) ||
-      t.includes('inail') || t.includes('mobbing') ||
-      (t.includes('lavoro') && (t.includes('diritto') || t.includes('contratto') || t.includes('tribunal') || t.includes('corte'))))
-    return 'lavoro';
-
-  if (t.includes('corte costituzionale') || t.includes('consulta') ||
-      t.includes('incostituzional') || t.includes('referendum') ||
-      t.includes('separazione carriere') ||
-      (t.includes('costituzional') && !t.includes('diritto costituzionale italiano')))
-    return 'costituzionale';
-
-  // penale check DOPO costituzionale
-  if (t.includes('penal') || t.includes('reato') || t.includes('imputat') ||
-      (t.includes('condann') && !t.includes('condanna civile')) ||
-      t.includes('arresto') || t.includes('carcere') || t.includes('omicidio') ||
-      t.includes('corruzione') || t.includes('peculato') ||
-      (t.includes('c.p.') && !t.includes('c.p.c.') && !t.includes('c.p.p.')))
-    return 'penale';
-
-  // lavoro PRIMA di tributario
-  if (t.includes('licenziamento') || t.includes('ccnl') || t.includes('sindac') ||
-      t.includes('retribuzione') || t.includes('stipendio') ||
-      t.includes('inail') || t.includes('mobbing') ||
-      (t.includes('inps') && !t.includes('inps credito')) ||
-      (t.includes('pensione') && !t.includes('pensione alimentare')) ||
-      (t.includes('lavoro') && (t.includes('diritto') || t.includes('contratto') || t.includes('tribunal') || t.includes('corte'))))
-    return 'lavoro';
-
-  if (t.includes('tar ') || t.includes('t.a.r.') || t.includes('consiglio di stato') ||
-      t.includes('appalto') || t.includes('pubblica amministrazione') ||
-      t.includes('agcm') || t.includes('antitrust') || t.includes('anac') ||
-      t.includes('urbanistic') || t.includes('edilizi'))
-    return 'amministrativo';
-
-  if (t.includes('privacy') || t.includes('gdpr') ||
-      (t.includes('garante') && t.includes('dati')) ||
-      t.includes('protezione dei dati') || t.includes('data breach'))
-    return 'privacy';
-
-  if (t.includes('consob') || t.includes('anatocismo') || t.includes('usura') ||
-      (t.includes('mutuo') && !t.includes('mutuo soccorso')) ||
-      (t.includes('bancari') && t.includes('corte')))
-    return 'bancario';
-
-  if (t.includes('divorzio') ||
-      (t.includes('separazione') && !t.includes('separazione carriere')) ||
-      (t.includes('affidamento') && t.includes('figl')) ||
-      (t.includes('mantenimento') && (t.includes('figl') || t.includes('coniug'))) ||
-      t.includes('assegno divorzile'))
-    return 'famiglia';
-
-  if ((t.includes('corte di giustizia') && t.includes('ue')) ||
-      t.includes('direttiva ue') || t.includes('regolamento ue') ||
-      t.includes('cedu') || t.includes('parlamento europeo'))
-    return 'eu';
-
-  if (t.includes('immigra') || t.includes('permesso di soggiorno') ||
-      t.includes('protezione internazionale') || t.includes('rifugiat') || t.includes('migrante'))
-    return 'immigrazione';
-
-  if (t.includes('inquinamento') || t.includes('bonifica') ||
-      (t.includes('ambiente') && t.includes('reato')))
-    return 'ambientale';
-
-  return 'civile';
+  return 'religioni_mondo';
 }
 
 
