@@ -504,6 +504,24 @@ const ShareIcon = () => (
 function NewsCard({ item, onOpenArticolo }) {
   const [expanded, setExpanded] = useState(false);
   const { share, popup, closePopup } = useShare();
+  // Traduzione on-demand della card (tasto "Traduci" per gli articoli stranieri)
+  const [trad, setTrad] = useState(null);
+  const [tradLoading, setTradLoading] = useState(false);
+  const traduciCard = async () => {
+    if (tradLoading || trad) return;
+    setTradLoading(true);
+    try {
+      const tr = async (text) => {
+        if (!text) return '';
+        const r = await fetch(API + '/api/translate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text, lang: item.lang }) });
+        const d = await r.json();
+        return d.translated || text;
+      };
+      const [tTitle, tDesc] = await Promise.all([tr(item.title), tr(item.desc)]);
+      setTrad({ title: tTitle, desc: tDesc });
+    } catch (_) {}
+    setTradLoading(false);
+  };
 
   // ── Anteprima immagine on-demand quando manca la thumbnail RSS ──
   const hasThumb = !!(item.thumb && item.thumb.startsWith("http"));
@@ -647,7 +665,7 @@ function NewsCard({ item, onOpenArticolo }) {
             onMouseEnter={e => e.currentTarget.style.color = isSentenza ? cassColor : "var(--eg-accent)"}
             onMouseLeave={e => e.currentTarget.style.color="var(--eg-text)"}
           >
-            {item.title}
+            {(trad && trad.title) || item.title}
           </h3>
         </div>
 
@@ -670,7 +688,7 @@ function NewsCard({ item, onOpenArticolo }) {
             marginTop:8, fontSize:12, color:"var(--eg-text-muted)", lineHeight:1.6,
             overflow:"hidden", display:"-webkit-box",
             WebkitLineClamp: expanded ? 999 : 2, WebkitBoxOrient:"vertical",
-          }}>{cleanHTML(item.desc)}</div>
+          }}>{cleanHTML((trad && trad.desc) || item.desc)}</div>
         )}
 
         {/* Norme */}
@@ -738,6 +756,12 @@ function NewsCard({ item, onOpenArticolo }) {
             }}>
             <ShareIcon /> Condividi
           </button>
+          {item.lang && item.lang !== 'it' && !item.translated && !trad && (
+            <button onClick={traduciCard} disabled={tradLoading} title="Traduci in italiano" style={{
+              background:'transparent', border:'1px solid var(--eg-border)', borderRadius:4,
+              color:'var(--eg-text-muted)', cursor:'pointer', padding:'4px 8px', fontSize:11
+            }}>{tradLoading ? 'Traduco…' : '🇮🇹 Traduci'}</button>
+          )}
           <a href={item.link} target="_blank" rel="noopener noreferrer"
             style={{ fontSize:11, color:"var(--eg-text-muted)", textDecoration:"none", padding:"4px 8px" }}
             title="Articolo originale">↗</a>
@@ -1117,6 +1141,10 @@ function ArticleReaderPanel({ item, onClose, onOpenArticolo }) {
   const [fetchingFull, setFetchingFull] = useState(false);
   const [manualContent, setManualContent] = useState(null);
   const [fetchError, setFetchError] = useState(null);
+  // Traduzione integrale on-demand (articoli stranieri)
+  const [tradFull, setTradFull] = useState(null);
+  const [tradFullLoading, setTradFullLoading] = useState(false);
+  const [mostraOriginale, setMostraOriginale] = useState(false);
 
   const isCassazioneArticle = /cassazione|Cass\./i.test(item?.source || '') || /^cassazione/i.test(item?.category || '');
 
@@ -1126,6 +1154,7 @@ function ArticleReaderPanel({ item, onClose, onOpenArticolo }) {
     setContent(null); setScalata({ l0:null, l1:null, l2:null, l3:null, related:[] });
     setScalataStarted(false); setActiveScalataTab(null);
     setManualContent(null); setFetchError(null); setFetchingFull(false);
+    setTradFull(null); setTradFullLoading(false); setMostraOriginale(false);
     const url = item.link || item.url || "";
     if (!url) return;
     fetch("/api/article?url=" + encodeURIComponent(url) + "&title=" + encodeURIComponent((item.title||'').substring(0,80)))
@@ -1330,7 +1359,37 @@ function ArticleReaderPanel({ item, onClose, onOpenArticolo }) {
               {item.desc ? <p style={{margin:0}}>{cleanHTML(item.desc)}</p> : <p style={{color:"var(--eg-text-muted)"}}>Caricamento articolo...</p>}
             </div>
           )}
-          {(content || manualContent) && hasContent && (
+          {item.lang && item.lang !== 'it' && hasContent && (
+            <div style={{ margin:'0 0 14px', display:'flex', gap:8, alignItems:'center' }}>
+              {!tradFull && (
+                <button disabled={tradFullLoading} onClick={async () => {
+                  setTradFullLoading(true);
+                  try {
+                    const plain = (manualContent || articleText || '').replace(/<[^>]+>/g, ' ').replace(/[ \t]+/g, ' ').trim();
+                    const r = await fetch(API + '/api/translate-full', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ text: plain, lang: item.lang }) });
+                    const d = await r.json();
+                    if (d.translated) setTradFull(d.translated);
+                  } catch(_) {}
+                  setTradFullLoading(false);
+                }} style={{ fontSize:12, fontWeight:700, padding:'6px 14px', borderRadius:6, border:'1px solid var(--eg-accent)', background:'var(--eg-accent)15', color:'var(--eg-accent)', cursor:'pointer' }}>
+                  {tradFullLoading ? 'Traduco l\u2019articolo\u2026' : '\ud83c\uddee\ud83c\uddf9 Traduci articolo in italiano'}
+                </button>
+              )}
+              {tradFull && (
+                <button onClick={() => setMostraOriginale(v => !v)} style={{ fontSize:12, padding:'6px 14px', borderRadius:6, border:'1px solid var(--eg-border)', background:'transparent', color:'var(--eg-text-muted)', cursor:'pointer' }}>
+                  {mostraOriginale ? 'Mostra traduzione' : 'Mostra originale'}
+                </button>
+              )}
+            </div>
+          )}
+          {tradFull && !mostraOriginale && hasContent && (
+            <div style={{ fontSize:14, color:'var(--eg-text)', lineHeight:1.75, fontFamily:'Georgia,serif' }}>
+              {tradFull.split(/\n{2,}/).filter(p => p.trim()).map((p,i) => (
+                <p key={i} style={{ margin:'0 0 14px' }}>{p.trim()}</p>
+              ))}
+            </div>
+          )}
+          {(!tradFull || mostraOriginale) && (content || manualContent) && hasContent && (
             manualContent
               ? <div style={{ fontSize:14, color:"var(--eg-text)", lineHeight:1.75, fontFamily:"Georgia,serif" }}>
                   {manualContent.split(/\n{2,}/).filter(p => p.trim().length > 30).map((p,i) => (

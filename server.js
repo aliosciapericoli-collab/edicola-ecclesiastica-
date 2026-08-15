@@ -845,8 +845,11 @@ async function translateOne(text, fromLang, retries = 1) {
 async function translateBatchClaude(items, fromLang) {
   if (!items.length) return null;
   if (!canCallClaude('translate')) return null;
+  // max_tokens proporzionale al testo da tradurre (i blocchi integrali del
+  // "tasto Traduci" superano di molto i titoli del refresh).
+  const _chars = items.reduce((n, i) => n + ((i.t || '').length + (i.d || '').length), 0);
   const payload = {
-    model: 'claude-haiku-4-5', max_tokens: 2500, temperature: 0,
+    model: 'claude-haiku-4-5', max_tokens: Math.min(8000, Math.max(2500, Math.ceil(_chars * 0.7) + 400)), temperature: 0,
     messages: [{ role: 'user', content:
       'Traduci in italiano giornalistico questi titoli (t) e sommari (d) di notizie (lingua di origine: ' + fromLang + '). ' +
       'Rispondi SOLO con un array JSON nello stesso ordine, stessi campi, senza commenti.\n' +
@@ -2503,6 +2506,40 @@ http.createServer((req, res) => {
         res.end(JSON.stringify({error: e.message}));
       }
     });
+  } else if (url === '/api/translate-full' && req.method === 'POST') {
+    // Traduzione INTEGRALE on-demand di un articolo straniero ("tasto Traduci").
+    // Spezza il testo in blocchi da ~1800 caratteri sui confini di paragrafo e
+    // li traduce con Claude Haiku in chiamate da 8 blocchi. Tetto 12.000 caratteri.
+    let body = '';
+    req.on('data', c => body += c);
+    req.on('end', async () => {
+      res.setHeader('Content-Type', 'application/json');
+      res.setHeader('Access-Control-Allow-Origin', '*');
+      try {
+        const { text, lang } = JSON.parse(body);
+        if (!text || !lang || lang === 'it') return res.end(JSON.stringify({ translated: text || '' }));
+        const testo = String(text).substring(0, 12000);
+        const paragrafi = testo.split(/\n{2,}/);
+        const blocchi = [];
+        let cur = '';
+        for (const p of paragrafi) {
+          if ((cur + '\n\n' + p).length > 1800 && cur) { blocchi.push(cur); cur = p; }
+          else cur = cur ? cur + '\n\n' + p : p;
+        }
+        if (cur) blocchi.push(cur);
+        const fuori = [];
+        for (let i = 0; i < blocchi.length; i += 4) {
+          const batch = blocchi.slice(i, i + 4).map(b => ({ t: b, d: '' }));
+          const out = await translateBatchClaude(batch, lang);
+          if (!out) { fuori.push(...blocchi.slice(i, i + 4)); continue; }
+          fuori.push(...out.map((o, j) => (o && o.t) ? o.t : blocchi[i + j]));
+        }
+        res.end(JSON.stringify({ translated: fuori.join('\n\n') }));
+      } catch(e) {
+        res.end(JSON.stringify({ translated: '', error: e.message }));
+      }
+    });
+
   } else if (url === '/api/translate' && req.method === 'POST') {
     let body = '';
     req.on('data', c => body += c);
