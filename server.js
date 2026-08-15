@@ -70,6 +70,55 @@ function bootJobs() {
         setTimeout(()=>{ runBackup(); setInterval(runBackup, 86400000); }, d);
         console.log('[Jobs] Backup DB ogni notte 03:00 (fra '+Math.round(d/60000)+' min)');
       })();
+      // Auto-aggiornamento dal repository GitHub alle 02:10 — se main ha nuovi
+      // commit: git pull e riavvio pm2. Nessun crontab necessario.
+      (function scheduleAutoUpdate() {
+        const { execFile, spawn } = require('child_process');
+        const now=new Date(), next=new Date(now);
+        next.setHours(2,10,0,0); if(next<=now) next.setDate(next.getDate()+1);
+        const d=next-now;
+        function runUpdate() {
+          execFile('git', ['-C', __dirname, 'fetch', 'origin', 'main'], { timeout: 120000 }, (err) => {
+            if (err) { console.warn('[AutoUpdate] fetch:', err.message); return; }
+            execFile('git', ['-C', __dirname, 'rev-parse', 'HEAD', 'origin/main'], (err2, out) => {
+              if (err2) { console.warn('[AutoUpdate] rev-parse:', err2.message); return; }
+              const [local, remote] = out.trim().split('\n');
+              if (local === remote) { console.log('[AutoUpdate] Nessun aggiornamento.'); return; }
+              console.log('[AutoUpdate] Nuovi commit su main — pull e riavvio…');
+              execFile('git', ['-C', __dirname, 'pull', 'origin', 'main'], { timeout: 300000 }, (err3) => {
+                if (err3) { console.warn('[AutoUpdate] pull:', err3.message); return; }
+                const p = spawn('pm2', ['restart', 'edicola-ecclesiastica'], { detached: true, stdio: 'ignore' });
+                p.unref();
+              });
+            });
+          });
+        }
+        setTimeout(()=>{ runUpdate(); setInterval(runUpdate, 86400000); }, d);
+        console.log('[Jobs] Auto-update da GitHub ogni notte 02:10 (fra '+Math.round(d/60000)+' min)');
+      })();
+      // Corpus ecclesiastico: blocco giornaliero da 10.000 unita' alle 02:30,
+      // eseguito come processo figlio con log su corpus/run-daily.log.
+      (function scheduleCorpus() {
+        const { spawn } = require('child_process');
+        const fs2 = require('fs');
+        const now=new Date(), next=new Date(now);
+        next.setHours(2,30,0,0); if(next<=now) next.setDate(next.getDate()+1);
+        const d=next-now;
+        let running = false;
+        function runCorpus() {
+          if (running) { console.log('[Corpus] Run precedente ancora attiva, salto.'); return; }
+          running = true;
+          const logPath = require('path').join(__dirname, 'corpus', 'run-daily.log');
+          const log = fs2.createWriteStream(logPath, { flags: 'a' });
+          log.write('\n======== ' + new Date().toISOString() + ' — blocco giornaliero ========\n');
+          const p = spawn(process.execPath, [require('path').join(__dirname, 'corpus', 'run-daily.js')], { cwd: __dirname });
+          p.stdout.pipe(log); p.stderr.pipe(log);
+          p.on('close', (code) => { running = false; log.end('\n[Corpus] exit ' + code + '\n'); console.log('[Corpus] Blocco giornaliero terminato (exit ' + code + ')'); });
+          console.log('[Corpus] Blocco giornaliero avviato (max 10.000 unita\u0027) — log: corpus/run-daily.log');
+        }
+        setTimeout(()=>{ runCorpus(); setInterval(runCorpus, 86400000); }, d);
+        console.log('[Jobs] Corpus ecclesiastico ogni notte 02:30 (fra '+Math.round(d/60000)+' min)');
+      })();
     } catch(e) { console.warn('[Jobs] init err:', e.message); }
     // Modulo 6 — Scraper istituzionali (ogni 30 min)
     try {
