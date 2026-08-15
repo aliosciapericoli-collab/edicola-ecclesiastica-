@@ -58,6 +58,14 @@ const getColors = () => _darkMode ? DARK : LIGHT;
 let COLORS = getColors();
 
 const AREA_COLORS = {
+  // Aree ecclesiastiche
+  "santa_sede": "#C9A45C",
+  "diritto_canonico": "#A63A50",
+  "stato_chiese": "#7B68A6",
+  "chiesa_italia": "#5CA065",
+  "confessioni_acattoliche": "#5B9BD5",
+  "liberta_religiosa": "#5CBAC4",
+  "religioni_mondo": "#C4835C",
   "penale": "#C45C5C",
   "civile": "#5B9BD5",
   "lavoro": "#5CA065",
@@ -563,7 +571,7 @@ function NewsCard({ item, onOpenArticolo }) {
     } catch(e) {}
     return [];
   })();
-  const areaColor = AREA_COLORS[item.category] || "var(--eg-accent)";
+  const areaColor = AREA_COLORS[item.area_diritto || item.category] || "var(--eg-accent)";
 
   // Detect if this is a Cassazione/sentenza item
   const isCassazione = /^cassazione|^istituzionale_cassazione/.test(item.category || "");
@@ -643,7 +651,7 @@ function NewsCard({ item, onOpenArticolo }) {
             background: (isSentenza ? cassColor : areaColor)+"18",
             padding:"2px 7px", borderRadius:3,
             border:`1px solid ${(isSentenza ? cassColor : areaColor)}28`, whiteSpace:"nowrap"
-          }}>{isSentenza ? (sentenzaMeta?.sezione || "Cassazione") : (item.category||"altro").replace(/_/g," ")}</span>
+          }}>{isSentenza ? (sentenzaMeta?.sezione || "Cassazione") : catLabel(item.area_diritto || item.category || "altro")}</span>
           {sentenzaMeta?.numero && (
             <span style={{ fontSize:10, color:cassColor, fontWeight:700, fontFamily:"monospace" }}>n. {sentenzaMeta.numero}</span>
           )}
@@ -1253,7 +1261,7 @@ function ArticleReaderPanel({ item, onClose, onOpenArticolo }) {
   }
 
   if (!item) return null;
-  const areaColor = AREA_COLORS[item.category] || "var(--eg-accent)";
+  const areaColor = AREA_COLORS[item.area_diritto || item.category] || "var(--eg-accent)";
   const articleText = manualContent || content?.content;
   const hasContent = articleText && articleText.length > 100;
   const shortDesc = !item.desc || item.desc.length < 200 || item.desc === item.title;
