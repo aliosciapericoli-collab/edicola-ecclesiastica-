@@ -4,8 +4,8 @@
   "description": "Edicola Ecclesiastica — Diritto canonico, vaticano ed ecclesiastico",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#1a1612",
-  "theme_color": "#8b2500",
+  "background_color": "#131011",
+  "theme_color": "#8C2332",
   "orientation": "any",
   "icons": [
     {

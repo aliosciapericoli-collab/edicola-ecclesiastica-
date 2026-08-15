@@ -22,30 +22,36 @@ function loadPreview(url) {
   return p;
 }
 
+// Palette "Sala Stampa": fondo neutro caldo (bruno, non più blu-grigio),
+// oro invariato, porpora cardinalizia come secondo accento.
 const DARK = {
-  bg: "#0F1114",
-  surface: "#1A1D23",
-  surfaceHover: "#22262E",
-  border: "#2A2E37",
+  bg: "#131011",
+  surface: "#1D1719",
+  surfaceHover: "#251D20",
+  border: "#302629",
   accent: "#C8A96E",
   accentDim: "#8B7744",
+  porpora: "#C46A7C",
+  porporaDeep: "#7E2A3C",
   text: "#E8E4DD",
-  textMuted: "#8A8680",
-  textDim: "#5C5955",
+  textMuted: "#948A87",
+  textDim: "#5C5552",
   danger: "#C45C5C",
   success: "#4A9960",
   trending: "#D4A053",
 };
 
 const LIGHT = {
-  bg: "#F5F3EF",
+  bg: "#F5F1EA",
   surface: "#FFFFFF",
-  surfaceHover: "#EEE9E1",
-  border: "#D8D0C4",
-  accent: "#9A6F2E",
+  surfaceHover: "#EFE8DE",
+  border: "#DCD2C6",
+  accent: "#96702A",
   accentDim: "#C8A96E",
-  text: "#1A1814",
-  textMuted: "#5C5650",
+  porpora: "#8C2332",
+  porporaDeep: "#8C2332",
+  text: "#1E1814",
+  textMuted: "#6E645C",
   textDim: "#8A8480",
   danger: "#B04040",
   success: "#2E7A40",
@@ -766,8 +772,8 @@ function NewsCard({ item, onOpenArticolo }) {
           </button>
           {item.lang && item.lang !== 'it' && !item.translated && !trad && (
             <button onClick={traduciCard} disabled={tradLoading} title="Traduci in italiano" style={{
-              background:'transparent', border:'1px solid var(--eg-border)', borderRadius:4,
-              color:'var(--eg-text-muted)', cursor:'pointer', padding:'4px 8px', fontSize:11
+              background:'transparent', border:'1px solid var(--eg-porpora)', borderRadius:4,
+              color:'var(--eg-porpora)', cursor:'pointer', padding:'4px 8px', fontSize:11
             }}>{tradLoading ? 'Traduco…' : '🇮🇹 Traduci'}</button>
           )}
           <a href={item.link} target="_blank" rel="noopener noreferrer"
@@ -1379,7 +1385,7 @@ function ArticleReaderPanel({ item, onClose, onOpenArticolo }) {
                     if (d.translated) setTradFull(d.translated);
                   } catch(_) {}
                   setTradFullLoading(false);
-                }} style={{ fontSize:12, fontWeight:700, padding:'6px 14px', borderRadius:6, border:'1px solid var(--eg-accent)', background:'var(--eg-accent)15', color:'var(--eg-accent)', cursor:'pointer' }}>
+                }} style={{ fontSize:12, fontWeight:700, padding:'6px 14px', borderRadius:6, border:'1px solid var(--eg-porpora)', background:'var(--eg-porpora)15', color:'var(--eg-porpora)', cursor:'pointer' }}>
                   {tradFullLoading ? 'Traduco l\u2019articolo\u2026' : '\ud83c\uddee\ud83c\uddf9 Traduci articolo in italiano'}
                 </button>
               )}
@@ -7896,7 +7902,7 @@ function SidebarNav({ activeTab, setActiveTab }) {
     <aside style={{ width:"clamp(180px, 18vw, 240px)", flexShrink:0, borderRight:"1px solid var(--eg-border)", display:"flex", flexDirection:"column", position:"sticky", top:0, height:"100vh", overflowY:"auto" }}>
       {/* Logo desktop */}
       <div onClick={() => setActiveTab("notizie")} style={{ padding:"24px 16px", borderBottom:"1px solid var(--eg-border)", textAlign:"center", cursor:"pointer" }}>
-        <div style={{ width:56, height:56, borderRadius:"50%", background:"#1a5fb4", border:"2px solid #C8A84E", display:"flex", alignItems:"center", justifyContent:"center", margin:"0 auto 10px" }}>
+        <div style={{ width:56, height:56, borderRadius:"50%", background:"var(--eg-porpora-deep)", border:"2px solid var(--eg-accent)", display:"flex", alignItems:"center", justifyContent:"center", margin:"0 auto 10px" }}>
           <span style={{ color:"#fff", fontWeight:800, fontSize:22, letterSpacing:"-0.5px", userSelect:"none" }}>EE</span>
         </div>
         <h1 style={{ fontSize:22, fontWeight:800, color:"var(--eg-text)", letterSpacing:"2px", lineHeight:1.2, margin:0 }}>EDICOLA <span style={{ color:"var(--eg-accent)" }}>ECCLESIASTICA</span></h1>
@@ -8470,6 +8476,8 @@ export default function EdicolaGiuridica() {
     root.style.setProperty('--eg-danger', C.danger);
     root.style.setProperty('--eg-success', C.success);
     root.style.setProperty('--eg-trending', C.trending);
+    root.style.setProperty('--eg-porpora', C.porpora);
+    root.style.setProperty('--eg-porpora-deep', C.porporaDeep);
     document.body.style.background = C.bg;
   }, [darkMode]);
   const [articoloPanel, setArticoloPanel] = useState(null); // {codiceId, numero}
@@ -8572,9 +8580,9 @@ export default function EdicolaGiuridica() {
           <div className="eg-topbar-logo" onClick={() => setActiveTab("notizie")} style={{ cursor:"pointer", flexShrink:0 }}>
             <div style={{ display:"flex", alignItems:"center", gap:8 }}>
               <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" style={{ width:28, height:28, flexShrink:0 }}>
-                <circle cx="50" cy="50" r="48" fill="#1a5fb4"/>
-                <circle cx="50" cy="50" r="42" fill="none" stroke="#ffffff" strokeWidth="2"/>
-                <text x="50" y="63" textAnchor="middle" fontFamily="Arial,sans-serif" fontWeight="900" fontSize="36" fill="#ffffff" letterSpacing="-1">EG</text>
+                <circle cx="50" cy="50" r="48" fill="#7E2A3C"/>
+                <circle cx="50" cy="50" r="42" fill="none" stroke="#C8A96E" strokeWidth="2.5"/>
+                <text x="50" y="63" textAnchor="middle" fontFamily="Georgia,serif" fontWeight="900" fontSize="34" fill="#F5EDE2" letterSpacing="-1">EE</text>
               </svg>
               <div style={{ fontSize:13, fontWeight:800, color:"var(--eg-text)", lineHeight:1.1 }}>EDICOLA<br/><span style={{ color:"var(--eg-accent)" }}>ECCLESIASTICA</span></div>
             </div>

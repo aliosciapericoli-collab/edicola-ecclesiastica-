@@ -1,14 +1,17 @@
 /* ── CSS VARIABLES (default = dark) ── */
 :root {
-  --eg-bg: #0F1114;
-  --eg-surface: #1A1D23;
-  --eg-surface-hover: #22262E;
-  --eg-border: #2A2E37;
+  /* Palette "Sala Stampa" — fondo bruno caldo, oro invariato, porpora come secondo accento */
+  --eg-bg: #131011;
+  --eg-surface: #1D1719;
+  --eg-surface-hover: #251D20;
+  --eg-border: #302629;
   --eg-accent: #C8A96E;
   --eg-accent-dim: #8B7744;
+  --eg-porpora: #C46A7C;
+  --eg-porpora-deep: #7E2A3C;
   --eg-text: #E8E4DD;
-  --eg-text-muted: #8A8680;
-  --eg-text-dim: #5C5955;
+  --eg-text-muted: #948A87;
+  --eg-text-dim: #5C5552;
   --eg-danger: #C45C5C;
   --eg-success: #4A9960;
   --eg-trending: #D4A053;
