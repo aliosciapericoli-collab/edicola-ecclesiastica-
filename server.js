@@ -70,13 +70,12 @@ function bootJobs() {
         setTimeout(()=>{ runBackup(); setInterval(runBackup, 86400000); }, d);
         console.log('[Jobs] Backup DB ogni notte 03:00 (fra '+Math.round(d/60000)+' min)');
       })();
-      // Auto-aggiornamento dal repository GitHub alle 02:10 — se main ha nuovi
-      // commit: git pull e riavvio pm2. Nessun crontab necessario.
+      // Auto-aggiornamento dal repository GitHub OGNI 20 MINUTI — se main ha
+      // nuovi commit: git pull e riavvio pm2. Così le modifiche pubblicate
+      // vanno online da sole entro 20 minuti, senza toccare il server.
       (function scheduleAutoUpdate() {
         const { execFile, spawn } = require('child_process');
-        const now=new Date(), next=new Date(now);
-        next.setHours(2,10,0,0); if(next<=now) next.setDate(next.getDate()+1);
-        const d=next-now;
+        const d = 60 * 1000; // primo controllo 1 minuto dopo il boot
         function runUpdate() {
           execFile('git', ['-C', __dirname, 'fetch', 'origin', 'main'], { timeout: 120000 }, (err) => {
             if (err) { console.warn('[AutoUpdate] fetch:', err.message); return; }
@@ -93,8 +92,8 @@ function bootJobs() {
             });
           });
         }
-        setTimeout(()=>{ runUpdate(); setInterval(runUpdate, 86400000); }, d);
-        console.log('[Jobs] Auto-update da GitHub ogni notte 02:10 (fra '+Math.round(d/60000)+' min)');
+        setTimeout(()=>{ runUpdate(); setInterval(runUpdate, 20 * 60 * 1000); }, d);
+        console.log('[Jobs] Auto-update da GitHub ogni 20 minuti');
       })();
       // Corpus ecclesiastico: blocco giornaliero da 10.000 unita' alle 02:30,
       // eseguito come processo figlio con log su corpus/run-daily.log.
