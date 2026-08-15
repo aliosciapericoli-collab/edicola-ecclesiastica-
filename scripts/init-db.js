@@ -15,7 +15,9 @@ const path = require('path');
 const fs = require('fs');
 const Database = require('better-sqlite3');
 
-const SRC = path.join(__dirname, '..', '..', 'data', 'giuridica.db');
+// Override con ECCL_GIURIDICA_SRC se il repo non è annidato dentro edicola-giuridica
+const SRC = process.env.ECCL_GIURIDICA_SRC ||
+  path.join(__dirname, '..', '..', 'data', 'giuridica.db');
 const DST_DIR = path.join(__dirname, '..', 'data');
 const DST = path.join(DST_DIR, 'giuridica.db');
 

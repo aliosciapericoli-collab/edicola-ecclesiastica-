@@ -17,7 +17,9 @@ const fs = require("fs");
 const Database = require("better-sqlite3");
 const store = require("./db");
 
-const SRC = path.join(__dirname, "..", "..", "data", "cassazione-corpus.db");
+// Override con ECCL_CASSAZIONE_SRC se il repo non è annidato dentro edicola-giuridica
+const SRC = process.env.ECCL_CASSAZIONE_SRC ||
+  path.join(__dirname, "..", "..", "data", "cassazione-corpus.db");
 const DST = path.join(__dirname, "..", "data", "cassazione-corpus.db");
 
 /** Query FTS5 (OR implicito tra le voci; frasi tra doppi apici). */

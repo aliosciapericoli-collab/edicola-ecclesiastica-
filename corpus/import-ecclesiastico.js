@@ -19,7 +19,14 @@
  */
 
 const path = require("path");
-const lib = require(path.join(__dirname, "..", "..", "scrapers", "normativa-corpus", "lib.js"));
+// Layout annidato (dentro edicola-giuridica): usa la lib del corpus madre.
+// Repo standalone: usa la copia vendorizzata corpus/normattiva-lib.js.
+let lib;
+try {
+  lib = require(path.join(__dirname, "..", "..", "scrapers", "normativa-corpus", "lib.js"));
+} catch (_) {
+  lib = require("./normattiva-lib.js");
+}
 const store = require("./db");
 
 /** Seed: [urn, etichetta, rank] — rank basso = più prioritario. */

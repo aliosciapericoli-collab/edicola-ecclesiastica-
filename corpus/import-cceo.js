@@ -15,7 +15,13 @@ const { fetchHtml, htmlToText, sleep } = require("./fetch");
 const store = require("./db");
 
 const BASE = "https://www.intratext.com/IXT/ITA1881/";
+// L'edizione italiana ITA1881 NON contiene i titoli processuali (cann.
+// 1055-1400: i giudizi in genere, il giudizio contenzioso, i processi
+// speciali). Per quei canoni si ripiega sul testo latino ufficiale, completo,
+// dell'edizione LAT0758 — marcato in rubrica come testo latino.
+const BASE_LATINO = "https://www.intratext.com/IXT/LAT0758/";
 const URN = "urn:vatican:cceo:1990";
+const TOTALE_CANONI = 1546;
 
 /** IntraText separa "Can . 1" con spazi attorno al punto. */
 function parseCanoniIntratext(text) {
@@ -61,9 +67,44 @@ async function run({ db, budget } = {}) {
     await sleep(3000); // IntraText resetta le connessioni sotto ~1 richiesta ogni 3s
   }
 
+  // Fallback latino per i canoni assenti dall'edizione italiana
+  const mancanti = [];
+  for (let i = 1; i <= TOTALE_CANONI; i++) if (!canoni.has(i)) mancanti.push(i);
+  const latini = new Set();
+  if (mancanti.length > 0 && (!budget || budget.remaining() > 0)) {
+    console.log(`[CCEO] ${mancanti.length} canoni assenti dall'edizione italiana — fallback sul testo latino (LAT0758)`);
+    try {
+      const idxLat = fetchHtml(BASE_LATINO);
+      const pagesLat = [...new Set([...idxLat.matchAll(/href=(_P[0-9A-Z]+\.HTM)/gi)].map((m) => m[1]))]
+        .sort((a, b) => parseInt(a.match(/_P([0-9A-Z]+)\./i)[1], 36) - parseInt(b.match(/_P([0-9A-Z]+)\./i)[1], 36));
+      const manca = new Set(mancanti);
+      for (const page of pagesLat) {
+        if (manca.size === 0) break;
+        if (budget && budget.remaining() <= 0) break;
+        try {
+          const text = htmlToText(fetchHtml(BASE_LATINO + page));
+          for (const c of parseCanoniIntratext(text)) {
+            if (manca.has(c.numero)) { canoni.set(c.numero, c.testo); latini.add(c.numero); manca.delete(c.numero); }
+          }
+        } catch (e) {
+          await sleep(5000);
+        }
+        await sleep(3000);
+      }
+      console.log(`[CCEO] Fallback latino: ${latini.size} canoni recuperati`);
+    } catch (e) {
+      console.warn(`[CCEO] Fallback latino fallito: ${e.message.split("\n")[0]}`);
+    }
+  }
+
   const arts = [...canoni.entries()]
     .sort((a, b) => a[0] - b[0])
-    .map(([numero, testo], i) => ({ numero_articolo: numero, rubrica: null, testo_vigente: testo, ordine: i }));
+    .map(([numero, testo], i) => ({
+      numero_articolo: numero,
+      rubrica: latini.has(numero) ? "Testo latino ufficiale (traduzione italiana non disponibile nell'edizione IntraText)" : null,
+      testo_vigente: testo,
+      ordine: i,
+    }));
 
   store.upsertAtto(db, {
     urn: URN,
