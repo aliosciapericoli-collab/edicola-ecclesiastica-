@@ -7784,7 +7784,7 @@ function PageManifesto() {
   const MODULI = [
     ["Notizie",        <>L'unico aggregatore AI d'Italia dedicato a Chiesa e religioni: <strong style={{color:"var(--eg-accent)"}}>{fontiPh}</strong> fonti — Santa Sede, agenzie cattoliche, voci delle confessioni, stampa internazionale tradotta in italiano — lette, deduplicate e ordinate ogni ora.</>],
     ["Codici",         <>Il corpus del diritto della Chiesa e dei suoi rapporti con lo Stato: Codice di Diritto Canonico, CCEO, leggi vaticane, Patti Lateranensi e tutte le intese ex art. 8 Cost., più il magistero pontificio — <strong style={{color:"var(--eg-accent)"}}>{articoliPh}</strong> canoni e articoli ricercabili parola per parola.</>],
-    ["Giurisprudenza", <>Le sentenze della Cassazione in materia ecclesiastica — matrimonio concordatario, enti religiosi, 8×mille, libertà di culto: <strong style={{color:"var(--eg-accent)"}}>{sentenzePh}</strong> provvedimenti dal corpus ufficiale.</>],
+    ["Magistero",      <>I documenti che fanno il diritto della Chiesa: motu proprio, costituzioni apostoliche, encicliche, esortazioni e i sedici documenti del Concilio Vaticano II — di dodici pontefici, da Leone XIII a Leone XIV.</>],
   ];
 
   return (
@@ -7801,7 +7801,7 @@ function PageManifesto() {
         </p>
         {/* Stat hero — numeri reali */}
         <div style={{ display:"flex", justifyContent:"center", gap:28, marginTop:26, flexWrap:"wrap" }}>
-          {[[fontiPh,"fonti"],[sentenzePh,"sentenze ecclesiastiche"],[articoliPh,"canoni e articoli"]].map(([val,lab],i)=>(
+          {[[fontiPh,"fonti"],[sentenzePh,"atti nel corpus"],[articoliPh,"canoni e articoli"]].map(([val,lab],i)=>(
             <div key={i} style={{ textAlign:"center" }}>
               <div style={{ fontSize:22, fontWeight:800, color:"var(--eg-accent)", lineHeight:1, fontFamily:"monospace" }}>{val}</div>
               <div style={{ fontSize:10, color:"var(--eg-text-dim)", textTransform:"uppercase", letterSpacing:"0.08em", marginTop:6 }}>{lab}</div>
@@ -7898,7 +7898,6 @@ const TAB_SVGS = {
 // Sprint 1 — app ridotta a due sezioni: Notizie + Cassazione (+ Info/Manifesto).
 const TABS = [
   { id:"notizie", label:"Notizie" },
-  { id:"cassazione", label:"Giurispr." },
   { id:"norme", label:"Codici" },
   { id:"info", label:"Info" },
 ];
@@ -7911,7 +7910,6 @@ const NAV_ITEMS = [
   { id:"norme",  ramo:"ecclesiastico_it", label:"Stato e Chiese", short:"St-Chiese" },
   { id:"norme",  ramo:"vaticano",         label:"Leggi Vaticane", short:"Vaticano" },
   { id:"norme",  ramo:"magistero",        label:"Magistero",      short:"Magistero" },
-  { id:"cassazione", label:"Giurisprudenza", short:"Giur." },
   { id:"info",       label:"Manifesto",  short:"Manif." },
   { id:"guida",      label:"Guida",      short:"Guida" },
 ];
@@ -8116,7 +8114,7 @@ function SearchBar() {
     <div style={{ position:"relative", display:"flex", alignItems:"center", gap:8, background:"var(--eg-surface-hover)", borderRadius:8, padding:"7px 14px", flex:1, maxWidth: isMobile ? "none" : 460 }}>
       <span style={{ color:"var(--eg-text-muted)", fontSize:13 }}>🔍</span>
       <input ref={inputRef} type="text" value={query} onChange={handleChange}
-        placeholder="Cerca in notizie, Cassazione e norme..."
+        placeholder="Cerca in notizie, codici e canoni..."
         onFocus={() => { if (total > 0) setOpen(true); }}
         onBlur={() => setTimeout(() => { setOpen(false); if (isMobile && !query.trim()) setExpanded(false); }, 200)}
         onKeyDown={handleKeyDown}

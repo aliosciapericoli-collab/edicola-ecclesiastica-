@@ -3124,8 +3124,10 @@ http.createServer((req, res) => {
       const disabled = FEEDS.filter(f => feedHealth[f.u] && feedHealth[f.u].failures >= 5 && Date.now() < feedHealth[f.u].disabledUntil).length;
       fonti_attive = FEEDS.length - disabled;
     } catch(e) {}
+    // Niente Cassazione in questa testata: il secondo contatore del manifesto
+    // (chiave storica sentenze_corpus) è il numero di ATTI del corpus.
     let sentenze_corpus = null;
-    try { const cdb = getCorpusBB(); if (cdb) sentenze_corpus = cdb.prepare('SELECT COUNT(*) AS n FROM sentenze').get().n; } catch(e) {}
+    try { const ndb0 = getNormativaBB(); if (ndb0) sentenze_corpus = ndb0.prepare('SELECT COUNT(*) AS n FROM atti WHERE n_articoli > 0').get().n; } catch(e) {}
     let articoli_norme = null;
     try { const gdb = getCodiciBB(); if (gdb) articoli_norme = gdb.prepare('SELECT COUNT(*) AS n FROM articoli_codice').get().n; } catch(e) {}
     // Corpus ecclesiastico: canoni e articoli vivono in normativa.db (atti.n_articoli)
