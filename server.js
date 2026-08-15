@@ -813,7 +813,8 @@ function getPersistentArticles() {
 
 // ── TRADUZIONE BATCH ──
 // Traduci in batch con rate limiting per evitare blocchi Google
-// Traduzione via LibreTranslate self-hosted (porta 5000, zero limiti)
+// Traduzione: LibreTranslate self-hosted (porta 5000) se presente, altrimenti
+// fallback su Claude Haiku (categoria budget 'translate').
 async function translateOne(text, fromLang, retries = 1) {
   if (!text || text.length < 3) return text;
   const truncated = text.substring(0, 500);
@@ -825,13 +826,55 @@ async function translateOne(text, fromLang, retries = 1) {
       if (data.translatedText && data.translatedText.length > 2) {
         return data.translatedText;
       }
-      return null;
+      break; // LibreTranslate risponde ma non traduce → prova Claude
     } catch(e) {
       if (attempt < retries) await new Promise(r => setTimeout(r, 500));
-      else return null;
     }
   }
+  // Fallback Claude Haiku
+  try {
+    const batch = await translateBatchClaude([{ t: truncated, d: '' }], fromLang);
+    if (batch && batch[0] && batch[0].t) return batch[0].t;
+  } catch(_) {}
   return null;
+}
+
+// ── Traduzione batch via Claude Haiku ───────────────────────────────────────
+// Traduce fino a ~15 titoli+descrizioni per chiamata (JSON in/out). Usata dal
+// refresh dei feed per le fonti straniere e come fallback di translateOne.
+async function translateBatchClaude(items, fromLang) {
+  if (!items.length) return null;
+  if (!canCallClaude('translate')) return null;
+  const payload = {
+    model: 'claude-haiku-4-5', max_tokens: 2500, temperature: 0,
+    messages: [{ role: 'user', content:
+      'Traduci in italiano giornalistico questi titoli (t) e sommari (d) di notizie (lingua di origine: ' + fromLang + '). ' +
+      'Rispondi SOLO con un array JSON nello stesso ordine, stessi campi, senza commenti.\n' +
+      JSON.stringify(items.map(i => ({ t: (i.t || '').substring(0, 300), d: (i.d || '').substring(0, 400) })))
+    }]
+  };
+  try {
+    const resp = await _callClaude(payload, 30000);
+    if (resp.status !== 200) return null;
+    const body = JSON.parse(resp.body);
+    const txt = ((body.content || [])[0] || {}).text || '';
+    const m = txt.match(/\[[\s\S]*\]/);
+    if (!m) return null;
+    const arr = JSON.parse(m[0]);
+    return Array.isArray(arr) && arr.length === items.length ? arr : null;
+  } catch (_) { return null; }
+}
+
+// Cache persistente delle traduzioni (per URL) — evita di ritradurre lo stesso
+// articolo a ogni refresh dei feed (ogni 5 min).
+const _translCache = new Map();
+const TRANSL_CACHE_MAX = 4000;
+function _translCacheSet(k, v) {
+  if (_translCache.size >= TRANSL_CACHE_MAX) {
+    const first = _translCache.keys().next().value;
+    _translCache.delete(first);
+  }
+  _translCache.set(k, v);
 }
 
 function postUrl(url, body, timeoutMs = 8000) {
@@ -1203,11 +1246,39 @@ async function refreshFeeds() {
     toTranslate[a.lang].push(a);
   });
 
-  // NO traduzione automatica — i titoli stranieri restano nella lingua originale
-  // La traduzione avviene on-demand via /api/translate nel frontend
+  // Traduzione automatica in italiano dei titoli/sommari stranieri.
+  // Cache per URL (mai due traduzioni dello stesso articolo); batch da 15 per
+  // chiamata Claude; se il budget 'translate' è esaurito l'articolo resta in
+  // lingua originale e verrà ritentato al refresh successivo.
   const translated = [];
   for (const [lang, arts] of Object.entries(toTranslate)) {
-    translated.push(...arts); // passa gli articoli non tradotti con lang originale
+    const daFare = [];
+    for (const a of arts) {
+      const key = a.url || a.link || a.title;
+      const hit = _translCache.get(key);
+      if (hit) {
+        translated.push({ ...a, title: hit.t, desc: hit.d || a.desc, title_original: a.title, translated: true });
+      } else {
+        daFare.push(a);
+      }
+    }
+    for (let i = 0; i < daFare.length; i += 15) {
+      const blocco = daFare.slice(i, i + 15);
+      let out = null;
+      try {
+        out = await translateBatchClaude(blocco.map(a => ({ t: a.title, d: a.desc || '' })), lang);
+      } catch (_) {}
+      blocco.forEach((a, j) => {
+        const tr = out && out[j];
+        if (tr && tr.t) {
+          const key = a.url || a.link || a.title;
+          _translCacheSet(key, { t: tr.t, d: tr.d || '' });
+          translated.push({ ...a, title: tr.t, desc: tr.d || a.desc, title_original: a.title, translated: true });
+        } else {
+          translated.push({ ...a, translated: false });
+        }
+      });
+    }
   }
 
   all = [...italiani, ...translated];
