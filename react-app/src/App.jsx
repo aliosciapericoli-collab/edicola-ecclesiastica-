@@ -4292,6 +4292,12 @@ function PageNorme() {
   const [codici, setCodici] = useState([]);
   const [atti, setAtti] = useState([]);          // (legacy, non usato dalla vista a rami)
   const [rami, setRami] = useState({});          // { canonico: {atti,totale}, ... }
+  const [soloRamo, setSoloRamo] = useState(window.__pendingRamo || null);
+  useEffect(() => {
+    const h = (e) => { setSoloRamo(e.detail || null); setSel(null); setArt(null); setRisultati(null); setQ(''); };
+    document.addEventListener('eg:ramoChange', h);
+    return () => document.removeEventListener('eg:ramoChange', h);
+  }, []);
   const [attiInfo, setAttiInfo] = useState({ in_costruzione: false, pending: 0, totale: 0 });
   const [stato, setStato] = useState('loading'); // loading | attivo | in_costruzione | errore
   const [tot, setTot] = useState({ codici: 0, articoli: 0, atti: 0 });
@@ -4597,7 +4603,15 @@ function PageNorme() {
         ))}
       </div>
 
-      {RAMI_CORPUS.map((ramo) => {
+      {soloRamo && (
+        <button onClick={() => { window.__pendingRamo = null; setSoloRamo(null); }} style={{ background:'transparent', border:'1px solid var(--eg-border)', borderRadius:6, padding:'5px 12px', color:'var(--eg-text-muted)', cursor:'pointer', fontSize:12.5, margin:'14px 0 0' }}>← Tutti i rami del corpus</button>
+      )}
+      {soloRamo && !(rami[soloRamo] && rami[soloRamo].atti && rami[soloRamo].atti.length) && (
+        <div style={{ marginTop:18, padding:'16px 18px', background:'var(--eg-surface)', border:'1px solid var(--eg-border)', borderRadius:10, fontSize:13, color:'var(--eg-text-muted)', lineHeight:1.6 }}>
+          Questo ramo del corpus è in scaricamento: i testi arrivano con i blocchi notturni (fino a 10.000 unità a notte). Torna a trovarlo tra poco.
+        </div>
+      )}
+      {RAMI_CORPUS.filter(ramo => !soloRamo || ramo.id === soloRamo).map((ramo) => {
         const r = rami[ramo.id];
         if (!r || !r.atti || r.atti.length === 0) return null;
         return (
@@ -7892,9 +7906,12 @@ const TABS = [
 // Voci di navigazione (header desktop + bottom-nav mobile). "guida" apre l'Assistente EG.
 // `label` = etichetta piena (header desktop); `short` = etichetta compatta (bottom-nav a 390px).
 const NAV_ITEMS = [
-  { id:"notizie",    label:"Notizie",    short:"Notizie" },
+  { id:"notizie",          label:"Notizie",        short:"Notizie" },
+  { id:"norme",  ramo:"canonico",         label:"Dir. Canonico",  short:"Canonico" },
+  { id:"norme",  ramo:"ecclesiastico_it", label:"Stato e Chiese", short:"St-Chiese" },
+  { id:"norme",  ramo:"vaticano",         label:"Leggi Vaticane", short:"Vaticano" },
+  { id:"norme",  ramo:"magistero",        label:"Magistero",      short:"Magistero" },
   { id:"cassazione", label:"Giurisprudenza", short:"Giur." },
-  { id:"norme",      label:"Codici",     short:"Codici" },
   { id:"info",       label:"Manifesto",  short:"Manif." },
   { id:"guida",      label:"Guida",      short:"Guida" },
 ];
@@ -8572,8 +8589,16 @@ export default function EdicolaGiuridica() {
   };
 
   // Navigazione: le sezioni cambiano tab; "guida" apre il pannello Assistente EG.
-  const onNav = (id) => {
+  const [activeRamo, setActiveRamo] = useState(null);
+  const onNav = (id, ramo) => {
     if (id === 'guida') { if (window.__assistenteOpen) window.__assistenteOpen(); return; }
+    if (id === 'norme') {
+      window.__pendingRamo = ramo || null;
+      setActiveRamo(ramo || null);
+      document.dispatchEvent(new CustomEvent('eg:ramoChange', { detail: ramo || null }));
+    } else {
+      setActiveRamo(null);
+    }
     setActiveTab(id);
   };
 
@@ -8596,9 +8621,9 @@ export default function EdicolaGiuridica() {
           {/* Nav sezioni — orizzontale nell'header, solo desktop (>768px via CSS) */}
           <nav className="eg-header-nav">
             {NAV_ITEMS.map(item => {
-              const active = item.id !== 'guida' && activeTab === item.id;
+              const active = item.id !== 'guida' && activeTab === item.id && (item.id !== 'norme' || activeRamo === (item.ramo || null));
               return (
-                <button key={item.id} className={"eg-nav-btn" + (active ? " active" : "")} onClick={() => onNav(item.id)}>
+                <button key={item.id + (item.ramo || '')} className={"eg-nav-btn" + (active ? " active" : "")} onClick={() => onNav(item.id, item.ramo)}>
                   <span style={{ display:"inline-flex" }}>{TAB_SVGS[item.id]}</span>
                   <span>{item.label}</span>
                 </button>
