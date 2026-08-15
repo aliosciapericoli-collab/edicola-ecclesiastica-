@@ -1955,10 +1955,19 @@ function PageNotizie({ onOpenArticolo, onNavigate }) {
 
   // Se norma selezionata, mostra notizie dall'API dedicata; altrimenti feed normale
   const source = notizieFiltrate !== null ? (notizieFiltrate || []) : (notizie || []);
+  // Filtri per area: ordine canonico fisso (non per frequenza, così i chip non
+  // saltellano a ogni refresh) + conteggio articoli. Eventuali aree fuori
+  // elenco si accodano per frequenza.
+  const AREE_ORDINE = ['santa_sede','chiesa_italia','diritto_canonico','stato_chiese','confessioni_acattoliche','liberta_religiosa','religioni_mondo'];
   const aree = (() => {
     const freq = {};
     (notizie || []).forEach(n => { const k = n.area_diritto || n.category; if (k) freq[k] = (freq[k] || 0) + 1; });
-    return Object.entries(freq).sort((a, b) => b[1] - a[1]).slice(0, 12).map(([cat]) => cat);
+    const ordinate = AREE_ORDINE.filter(a => freq[a] > 0).map(a => [a, freq[a]]);
+    const extra = Object.entries(freq)
+      .filter(([k]) => !AREE_ORDINE.includes(k))
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, Math.max(0, 12 - ordinate.length));
+    return [...ordinate, ...extra];
   })();
   const filtered = (() => {
     // Se c'è un filtro norma da popup, usa quei risultati direttamente
@@ -2000,7 +2009,7 @@ function PageNotizie({ onOpenArticolo, onNavigate }) {
             cursor:"pointer", whiteSpace:"nowrap", flexShrink:0,
           }}>{filtroNorma.label} ✕</button>
         )}
-        {["Tutte", ...aree].map((a, i) => {
+        {[["__tutte", (notizie || []).length], ...aree].map(([a, n], i) => {
           const isActive = i === 0 ? (!filtroArea && !filtroNorma) : filtroArea === a;
           const color = i === 0 ? "var(--eg-accent)" : (AREA_COLORS[a] || "var(--eg-accent)");
           return (
@@ -2019,8 +2028,8 @@ function PageNotizie({ onOpenArticolo, onNavigate }) {
               color: isActive ? color : "var(--eg-text-muted)",
               borderRadius:20, padding:"5px 14px", fontSize:11, fontWeight:600,
               cursor:"pointer", whiteSpace:"nowrap", flexShrink:0,
-              transition:"all 0.15s",
-            }}>{i===0 ? "Tutte" : catLabel(a)}</button>
+              transition:"all 0.15s", display:"inline-flex", alignItems:"center", gap:5,
+            }}>{i===0 ? "Tutte" : catLabel(a)}<span style={{ opacity:0.55, fontWeight:500, fontSize:9.5 }}>{n}</span></button>
           );
         })}
       </div>
@@ -8579,11 +8588,8 @@ export default function EdicolaGiuridica() {
           {/* Logo — sempre visibile */}
           <div className="eg-topbar-logo" onClick={() => setActiveTab("notizie")} style={{ cursor:"pointer", flexShrink:0 }}>
             <div style={{ display:"flex", alignItems:"center", gap:8 }}>
-              <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" style={{ width:28, height:28, flexShrink:0 }}>
-                <circle cx="50" cy="50" r="48" fill="#7E2A3C"/>
-                <circle cx="50" cy="50" r="42" fill="none" stroke="#C8A96E" strokeWidth="2.5"/>
-                <text x="50" y="63" textAnchor="middle" fontFamily="Georgia,serif" fontWeight="900" fontSize="34" fill="#F5EDE2" letterSpacing="-1">EE</text>
-              </svg>
+              <img src="/stemma.png" alt="Edicola Ecclesiastica — Chiesa, Diritto e Società"
+                style={{ height:54, width:"auto", flexShrink:0, filter:"drop-shadow(0 1px 3px rgba(0,0,0,0.35))" }} />
               <div style={{ fontSize:13, fontWeight:800, color:"var(--eg-text)", lineHeight:1.1 }}>EDICOLA<br/><span style={{ color:"var(--eg-accent)" }}>ECCLESIASTICA</span></div>
             </div>
           </div>

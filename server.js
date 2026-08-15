@@ -3766,7 +3766,7 @@ http.createServer((req, res) => {
     res.setHeader('Content-Type', 'image/png');
     res.setHeader('Cache-Control', 'public, max-age=86400');
     try { res.end(fs.readFileSync(iconPath)); } catch(e) { res.writeHead(404); res.end(''); }
-  } else if (/^\/(logo-edicola\.png|favicon\.png|icon-192\.png|icon-512\.png|og-image\.png|robots\.txt|sitemap\.xml)$/.test(url)) {
+  } else if (/^\/(logo-edicola\.png|stemma\.png|logo-tondo\.png|favicon\.png|icon-192\.png|icon-512\.png|og-image\.png|robots\.txt|sitemap\.xml)$/.test(url)) {
     const fname = url.slice(1);
     const ext = fname.split('.').pop();
     const mime = {png:'image/png',jpg:'image/jpeg',txt:'text/plain',xml:'application/xml'}[ext]||'application/octet-stream';
