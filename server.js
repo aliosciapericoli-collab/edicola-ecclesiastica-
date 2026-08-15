@@ -1272,6 +1272,11 @@ async function refreshFeeds() {
   // chiamata Claude; se il budget 'translate' è esaurito l'articolo resta in
   // lingua originale e verrà ritentato al refresh successivo.
   const translated = [];
+  // Le traduzioni non devono MAI bloccare la pubblicazione: al massimo
+  // MAX_BATCH_TRADUZIONE lotti per ciclo di refresh; il resto esce in lingua
+  // originale e viene tradotto nei giri successivi (ogni 5 minuti).
+  const MAX_BATCH_TRADUZIONE = 8;
+  let _lottiFatti = 0;
   for (const [lang, arts] of Object.entries(toTranslate)) {
     const daFare = [];
     for (const a of arts) {
@@ -1285,10 +1290,15 @@ async function refreshFeeds() {
     }
     for (let i = 0; i < daFare.length; i += 15) {
       const blocco = daFare.slice(i, i + 15);
+      if (_lottiFatti >= MAX_BATCH_TRADUZIONE) {
+        blocco.forEach((a) => translated.push({ ...a, translated: false }));
+        continue;
+      }
       let out = null;
       try {
         out = await translateBatchClaude(blocco.map(a => ({ t: a.title, d: a.desc || '' })), lang);
       } catch (_) {}
+      _lottiFatti++;
       blocco.forEach((a, j) => {
         const tr = out && out[j];
         if (tr && tr.t) {
