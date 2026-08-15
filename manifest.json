@@ -1,0 +1,22 @@
+{
+  "name": "Edicola Ecclesiastica",
+  "short_name": "Ecclesiastica",
+  "description": "Edicola Ecclesiastica — Diritto canonico, vaticano ed ecclesiastico",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#1a1612",
+  "theme_color": "#8b2500",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/icon-192.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

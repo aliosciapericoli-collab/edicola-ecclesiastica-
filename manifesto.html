@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Edicola Ecclesiastica — Manifesto</title>
+<meta name="description" content="Facciamo poche cose. Le facciamo meglio di chiunque altro. Notizie giuridiche, archivio Cassazione con ricerca full-text, codici e leggi. Solo fonti ufficiali, numeri veri, gratis.">
+<link rel="canonical" href="https://edicolagiuridica.it/manifesto">
+<link rel="icon" href="/favicon.svg">
+<meta property="og:title" content="Edicola Ecclesiastica — Manifesto">
+<meta property="og:description" content="Facciamo poche cose. Le facciamo meglio di chiunque altro.">
+<meta property="og:url" content="https://edicolagiuridica.it/manifesto">
+<meta name="twitter:card" content="summary_large_image">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg: #FDF6E3;
+  --bg-dark: #1a1a1a;
+  --text: #1a1a1a;
+  --text-muted: #6a5a4a;
+  --accent: #c0390a;
+  --gold: #d4a843;
+  --gold-light: #f5ede0;
+  --border: #e0d5c5;
+  --font-serif: 'Georgia', 'Times New Roman', serif;
+  --font-mono: 'Courier New', monospace;
+}
+html { scroll-behavior: smooth; }
+body {
+  font-family: var(--font-serif);
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.75;
+}
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+/* ── TOP BAR ── */
+.top-bar {
+  background: var(--bg-dark);
+  padding: 14px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+.top-bar-left { display: flex; align-items: center; gap: 12px; }
+.top-bar-left a {
+  color: #fff;
+  font-family: var(--font-serif);
+  font-size: 17px;
+  font-weight: bold;
+  letter-spacing: 0.05em;
+}
+.top-bar-badge { display: inline-flex; width: 40px; height: 40px; }
+.top-bar-back {
+  color: #b0a898;
+  font-size: 13px;
+  font-family: var(--font-mono);
+  letter-spacing: 0.05em;
+}
+.top-bar-back:hover { color: #fff; }
+
+/* ── HERO ── */
+.hero {
+  background: var(--bg-dark);
+  color: var(--bg);
+  text-align: center;
+  padding: 64px 24px 52px;
+  border-bottom: 3px solid var(--gold);
+}
+.hero-label {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  color: var(--gold);
+  margin-bottom: 20px;
+}
+.hero h1 {
+  font-family: var(--font-serif);
+  font-size: clamp(26px, 5vw, 46px);
+  font-weight: normal;
+  margin-bottom: 18px;
+  line-height: 1.2;
+}
+.hero h1 em { font-style: italic; color: var(--gold); }
+.hero-sub {
+  font-size: clamp(16px, 2.6vw, 20px);
+  color: #d8cdb8;
+  max-width: 640px;
+  margin: 0 auto 32px;
+  line-height: 1.55;
+  font-style: italic;
+}
+.hero-cta {
+  display: inline-block;
+  background: var(--gold);
+  color: var(--bg-dark);
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: bold;
+  letter-spacing: 0.1em;
+  padding: 12px 28px;
+  border-radius: 4px;
+  text-transform: uppercase;
+}
+.hero-cta:hover { background: #e8b94e; text-decoration: none; }
+
+/* ── STATS HERO ── */
+.hero-stats {
+  display: flex;
+  justify-content: center;
+  gap: 40px;
+  margin-top: 44px;
+  flex-wrap: wrap;
+}
+.hero-stat { text-align: center; }
+.hero-stat .hs-num {
+  font-family: var(--font-mono);
+  font-size: 28px;
+  font-weight: bold;
+  color: var(--gold);
+  line-height: 1;
+}
+.hero-stat .hs-label {
+  font-size: 11px;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-top: 6px;
+}
+
+/* ── CONTENT ── */
+.content { max-width: 800px; margin: 0 auto; padding: 56px 24px 80px; }
+.content h2 {
+  font-size: 13px;
+  font-weight: bold;
+  margin: 52px 0 24px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  font-family: var(--font-mono);
+}
+.content h2:first-child { margin-top: 0; }
+.content p { font-size: 17px; margin-bottom: 16px; color: #2a2a2a; }
+
+/* ── MODULI GRID (i tre pilastri) ── */
+.modules-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+  margin: 0 0 8px;
+}
+.module-card {
+  background: var(--bg-dark);
+  border-radius: 8px;
+  padding: 24px 24px 22px;
+  display: flex;
+  flex-direction: column;
+}
+.mc-header { display: flex; align-items: flex-start; gap: 14px; margin-bottom: 10px; }
+.mc-icon { width: 36px; height: 36px; min-width: 36px; color: var(--gold); margin-top: 1px; }
+.mc-title {
+  font-family: var(--font-serif);
+  font-size: 18px;
+  font-weight: bold;
+  color: #fff;
+  line-height: 1.25;
+  letter-spacing: 0.02em;
+}
+.mc-badge {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: bold;
+  background: rgba(212,168,67,0.18);
+  color: var(--gold);
+  padding: 3px 9px;
+  border-radius: 3px;
+  margin-top: 5px;
+  letter-spacing: 0.05em;
+}
+.mc-desc { font-size: 15px; color: #b8a888; line-height: 1.7; margin-top: 10px; }
+.mc-desc strong { color: #e8d8b8; }
+.ph { color: var(--gold); font-weight: bold; font-family: var(--font-mono); }
+
+/* ── PROMESSE ── */
+.promesse { list-style: none; margin: 0; padding: 0; }
+.promesse li {
+  font-size: 17px;
+  color: #2a2a2a;
+  padding: 14px 0 14px 0;
+  border-bottom: 1px solid var(--border);
+  line-height: 1.65;
+}
+.promesse li:last-child { border-bottom: none; }
+.promesse li strong { color: var(--accent); }
+
+/* ── NOVITÀ ── */
+.novita { list-style: none; margin: 0; padding: 0; }
+.novita li {
+  display: flex;
+  gap: 16px;
+  align-items: baseline;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 16px;
+}
+.novita li:last-child { border-bottom: none; }
+.novita .nv-data {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text-muted);
+  min-width: 92px;
+  flex-shrink: 0;
+}
+.novita .nv-titolo { color: #2a2a2a; }
+.novita-empty { font-style: italic; color: var(--text-muted); font-size: 15px; }
+
+/* ── DISCLAIMER FOOTER ── */
+.disclaimer {
+  background: var(--gold-light);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 20px 24px;
+  margin-top: 52px;
+  font-size: 14px;
+  color: var(--text-muted);
+  line-height: 1.7;
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+}
+.disclaimer-icon { width: 22px; height: 22px; min-width: 22px; color: var(--text-muted); margin-top: 1px; }
+.disclaimer a { color: var(--accent); }
+
+/* ── FOOTER ── */
+.footer {
+  background: var(--bg-dark);
+  color: #888;
+  text-align: center;
+  padding: 24px;
+  font-size: 13px;
+  border-top: 2px solid var(--gold);
+}
+.footer a { color: var(--gold); }
+.footer a:hover { color: #fff; }
+
+@media (max-width: 640px) {
+  .hero-stats { gap: 24px; }
+  .novita li { flex-direction: column; gap: 2px; }
+  .novita .nv-data { min-width: 0; }
+}
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div class="top-bar">
+  <div class="top-bar-left">
+    <svg class="top-bar-badge" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="50" cy="50" r="48" fill="#1a3a6b"/>
+      <circle cx="50" cy="50" r="42" fill="none" stroke="#c8a96e" stroke-width="2.5"/>
+      <text x="50" y="50" dy="0.36em" text-anchor="middle" font-family="Arial Black,Arial,sans-serif" font-weight="400" font-size="38" fill="#ffffff" letter-spacing="1">EG</text>
+    </svg>
+    <a href="/">Edicola Ecclesiastica</a>
+  </div>
+  <a class="top-bar-back" href="/">&#8592; Torna all&#8217;edicola</a>
+</div>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-label">Il Manifesto</div>
+  <h1>Edicola Ecclesiastica<br><em>Manifesto</em></h1>
+  <p class="hero-sub">Facciamo poche cose. Le facciamo meglio di chiunque altro.</p>
+  <a href="/" class="hero-cta">Apri l&#8217;Edicola &#8594;</a>
+
+  <div class="hero-stats">
+    <div class="hero-stat">
+      <div class="hs-num"><span class="ph" data-ph="fonti">&#8230;</span></div>
+      <div class="hs-label">fonti</div>
+    </div>
+    <div class="hero-stat">
+      <div class="hs-num"><span class="ph" data-ph="sentenze">&#8230;</span></div>
+      <div class="hs-label">sentenze Cassazione</div>
+    </div>
+    <div class="hero-stat">
+      <div class="hs-num"><span class="ph" data-ph="articoli">&#8230;</span></div>
+      <div class="hs-label">articoli dei codici</div>
+    </div>
+  </div>
+</section>
+
+<!-- CONTENT -->
+<main class="content">
+
+  <h2>Cosa facciamo</h2>
+
+  <div class="modules-grid">
+
+    <!-- NOTIZIE -->
+    <div class="module-card">
+      <div class="mc-header">
+        <svg class="mc-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2Zm0 0a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2"/>
+          <path d="M18 14h-8M15 18h-5M10 6h8v4h-8z"/>
+        </svg>
+        <div>
+          <div class="mc-title">Notizie</div>
+        </div>
+      </div>
+      <div class="mc-desc">L&#8217;unico aggregatore AI d&#8217;Italia dedicato al diritto: <span class="ph" data-ph="fonti">&#8230;</span> fonti &#8212; testate giuridiche, istituzioni, corti, autorit&#224; &#8212; lette, deduplicate e ordinate ogni ora.</div>
+    </div>
+
+    <!-- CASSAZIONE -->
+    <div class="module-card">
+      <div class="mc-header">
+        <svg class="mc-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="m18 16 4-4-4-4"/>
+          <path d="m6 8-4 4 4 4"/>
+          <path d="m14.5 4-5 16"/>
+        </svg>
+        <div>
+          <div class="mc-title">Cassazione</div>
+        </div>
+      </div>
+      <div class="mc-desc">L&#8217;archivio delle sentenze civili e penali della Corte, costruito dalle fonti ufficiali, con ricerca full-text: <span class="ph" data-ph="sentenze">&#8230;</span> provvedimenti, e cresce ogni notte.</div>
+    </div>
+
+    <!-- NORME -->
+    <div class="module-card">
+      <div class="mc-header">
+        <svg class="mc-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H19a1 1 0 0 1 1 1v18a1 1 0 0 1-1 1H6.5a1 1 0 0 1 0-5H20"/>
+        </svg>
+        <div>
+          <div class="mc-title">Norme</div>
+        </div>
+      </div>
+      <div class="mc-desc">Codici e leggi, collegati alle notizie e alla giurisprudenza: <span class="ph" data-ph="articoli">&#8230;</span> articoli consultabili.</div>
+    </div>
+
+  </div><!-- /modules-grid -->
+
+  <h2>Tre promesse</h2>
+  <ul class="promesse">
+    <li><strong>Solo fonti ufficiali e pubbliche.</strong> Ogni documento porta il link all&#8217;originale.</li>
+    <li><strong>Numeri veri.</strong> I contatori di questa pagina sono letti in tempo reale; se una sezione &#232; in costruzione lo diciamo.</li>
+    <li><strong>Gratis.</strong> Gli atti dello Stato non hanno padroni (art. 5, legge sul diritto d&#8217;autore).</li>
+  </ul>
+
+  <h2>Novit&#224; recenti</h2>
+  <ul class="novita" id="lista-novita">
+    <li class="novita-empty">Caricamento&#8230;</li>
+  </ul>
+
+  <!-- DISCLAIMER -->
+  <div class="disclaimer">
+    <svg class="disclaimer-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="10"/>
+      <path d="M12 16v-4M12 8h.01"/>
+    </svg>
+    <span>
+      Strumento di supporto alla ricerca giuridica. Non sostituisce il parere professionale. Supervisione umana sempre necessaria.
+      &nbsp;&nbsp;<a href="/">Apri l&#8217;edicola &#8594;</a>
+    </span>
+  </div>
+
+</main>
+
+<footer class="footer">
+  <p><a href="/">Edicola Ecclesiastica</a> &mdash; L&#8217;aggregatore giuridico d&#8217;Italia</p>
+  <p style="margin-top:6px;font-size:12px">Powered by Claude AI (Anthropic) &middot; Fonti ufficiali e pubbliche &middot; Non fornisce pareri legali</p>
+</footer>
+
+<script>
+// Manifesto DINAMICO — legge /api/manifesto-data e riempie i segnaposto {N_*} e {LISTA_NOVITA}.
+// Se il fetch fallisce, mostra i testi SENZA numeri (mai "undefined" a schermo).
+(function() {
+  function fmt(n) {
+    if (n == null || isNaN(n)) return '';
+    return Number(n).toLocaleString('it-IT');
+  }
+  function setPh(key, val) {
+    var els = document.querySelectorAll('[data-ph="' + key + '"]');
+    for (var i = 0; i < els.length; i++) els[i].textContent = val;
+  }
+  function fmtData(iso) {
+    if (!iso) return '';
+    // atteso YYYY-MM-DD
+    var m = /^(\d{4})-(\d{2})-(\d{2})/.exec(iso);
+    if (!m) return iso;
+    var mesi = ['gen','feb','mar','apr','mag','giu','lug','ago','set','ott','nov','dic'];
+    return parseInt(m[3], 10) + ' ' + mesi[parseInt(m[2], 10) - 1] + ' ' + m[1];
+  }
+  function esc(s) {
+    return String(s == null ? '' : s)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  }
+
+  fetch('/api/manifesto-data')
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      if (!d) throw new Error('no data');
+      setPh('fonti',    d.fonti_attive   != null ? fmt(d.fonti_attive)   : '');
+      setPh('sentenze', d.sentenze_corpus != null ? fmt(d.sentenze_corpus) : '');
+      setPh('articoli', d.articoli_norme  != null ? fmt(d.articoli_norme)  : '');
+
+      var ul = document.getElementById('lista-novita');
+      if (!ul) return;
+      var nv = Array.isArray(d.novita) ? d.novita : [];
+      if (!nv.length) {
+        ul.innerHTML = '<li class="novita-empty">Nessuna novit&#224; recente da mostrare.</li>';
+        return;
+      }
+      ul.innerHTML = nv.map(function(x) {
+        return '<li><span class="nv-data">' + esc(fmtData(x.data)) + '</span>'
+             + '<span class="nv-titolo">' + esc(x.titolo) + '</span></li>';
+      }).join('');
+    })
+    .catch(function() {
+      // Fallback: rimuovi i segnaposto numerici così i testi restano leggibili senza numeri.
+      setPh('fonti', '');
+      setPh('sentenze', '');
+      setPh('articoli', '');
+      var ul = document.getElementById('lista-novita');
+      if (ul) ul.innerHTML = '<li class="novita-empty">Novit&#224; non disponibili al momento.</li>';
+    });
+})();
+</script>
+</body>
+</html>

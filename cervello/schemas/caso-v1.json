@@ -1,0 +1,72 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://edicolagiuridica.it/schemas/caso-v1.json",
+  "title": "Caso v1.0",
+  "description": "Struttura di un caso penale italiano. Usata sia per input utente (origin=user_query) sia per estrazione dal corpus (origin=corpus_extraction).",
+  "type": "object",
+  "required": ["id", "origin", "reato", "fase_processuale", "posizione", "fatti_sintesi", "extractor_version"],
+  "properties": {
+    "id": {"type": "string", "minLength": 6, "maxLength": 40},
+    "origin": {"type": "string", "enum": ["user_query", "corpus_extraction"]},
+    "lingua": {"type": "string", "const": "it"},
+    "reato": {
+      "type": "object",
+      "required": ["norma_primaria"],
+      "properties": {
+        "norma_primaria": {"type": "string", "description": "Forma canonica es. '609-bis c.p.'"},
+        "norme_secondarie": {"type": "array", "items": {"type": "string"}},
+        "leggi_speciali": {"type": "array", "items": {"type": "string"}},
+        "aggravanti": {"type": "array", "items": {"type": "string"}},
+        "attenuanti": {"type": "array", "items": {"type": "string"}}
+      }
+    },
+    "fase_processuale": {
+      "type": "string",
+      "enum": ["indagini", "cautelare", "riesame", "primo_grado", "appello", "legittimita", "esecuzione", "sorveglianza"]
+    },
+    "posizione": {
+      "type": "string",
+      "enum": ["indagato", "imputato", "condannato", "pm", "parte_civile", "responsabile_civile"]
+    },
+    "ufficio_giudicante": {
+      "type": "object",
+      "properties": {
+        "tipo": {"type": "string", "enum": ["gip", "gup", "tribunale", "tribunale_monocratico", "corte_appello", "cassazione", "assise", "assise_appello", "sorveglianza"]},
+        "sede": {"type": ["string", "null"]},
+        "sezione": {"type": ["string", "null"]}
+      }
+    },
+    "fatti_sintesi": {"type": "string", "maxLength": 800},
+    "motivi_impugnazione": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["tipo"],
+        "properties": {
+          "tipo": {"type": "string", "enum": ["violazione_legge", "vizio_motivazione", "travisamento_prova", "inosservanza_norma_proc", "altro"]},
+          "norma_violata": {"type": ["string", "null"]},
+          "descrizione": {"type": "string", "maxLength": 300}
+        }
+      }
+    },
+    "questioni_procedurali": {"type": "array", "items": {"type": "string"}},
+    "precedenti_personali_rilevanti": {"type": "boolean"},
+    "tempo_residuo_giorni": {"type": ["integer", "null"], "minimum": 0},
+    "urgenza": {"type": ["string", "null"], "enum": ["bassa", "media", "alta", "critica", null]},
+    "note_libere": {"type": "string", "maxLength": 500},
+    "esito": {
+      "type": "object",
+      "description": "Solo se origin=corpus_extraction",
+      "properties": {
+        "tipo": {"type": "string", "enum": ["accoglimento_integrale", "accoglimento_parziale", "rigetto", "inammissibilita", "annullamento_con_rinvio", "annullamento_senza_rinvio", "riqualificazione", "declaratoria_prescrizione"]},
+        "pena_finale": {"type": ["string", "null"]},
+        "principi_diritto_affermati": {"type": "array", "items": {"type": "string", "maxLength": 300}}
+      }
+    },
+    "documento_sorgente_id": {"type": ["string", "null"]},
+    "data_sentenza": {"type": ["string", "null"], "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"},
+    "extractor_version": {"type": "string"},
+    "created_at": {"type": "string", "format": "date-time"},
+    "embedding_vector_id": {"type": ["string", "null"]}
+  }
+}

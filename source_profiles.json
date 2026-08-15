@@ -1,0 +1,159 @@
+{
+  "_meta": {
+    "version": "1.0",
+    "updated": "2026-08-15",
+    "authority_scale": "5=massima (Santa Sede, AAS, Gazzetta Ufficiale, Cassazione, Corte Cost.) | 4=alta (agenzie ufficiali di conferenze episcopali/confessioni, editore professionale) | 3=media (testata qualificata di informazione religiosa) | 2=bassa (blog, fonti generaliste) | 1=nulla",
+    "note": "Edicola Ecclesiastica v1.0. La domanda chiave: questa fonte ha autorità in materia canonica/ecclesiastica? Posso citarla in un atto o in uno studio?"
+  },
+  "Vatican News IT": {
+    "full_name": "Vatican News — Portale ufficiale di informazione della Santa Sede",
+    "type": "istituzionale_santa_sede",
+    "country": "VA",
+    "ownership": "Dicastero per la Comunicazione — Santa Sede",
+    "authority": 5,
+    "authority_score": 5,
+    "scope": "Informazione ufficiale della Santa Sede: Papa, Curia, documenti, nomine.",
+    "note": "Organo ufficiale di comunicazione vaticana.",
+    "reliability": 5
+  },
+  "ACI Stampa": {
+    "full_name": "ACI Stampa — Agenzia Cattolica di Informazione",
+    "type": "agenzia_cattolica",
+    "country": "IT",
+    "ownership": "EWTN News",
+    "authority": 4,
+    "authority_score": 4,
+    "scope": "Informazione cattolica: Vaticano, Chiesa in Italia e nel mondo.",
+    "note": "Ramo italiano del gruppo EWTN/CNA.",
+    "reliability": 4
+  },
+  "Korazym": {
+    "full_name": "Korazym.org",
+    "type": "testata_cattolica",
+    "country": "IT",
+    "ownership": "Indipendente",
+    "authority": 3,
+    "authority_score": 3,
+    "scope": "Informazione su Vaticano e Chiesa cattolica.",
+    "reliability": 3
+  },
+  "Crux": {
+    "full_name": "Crux — Taking the Catholic Pulse",
+    "type": "testata_cattolica",
+    "country": "US",
+    "ownership": "Crux Catholic Media Inc.",
+    "authority": 4,
+    "authority_score": 4,
+    "scope": "Vaticanologia e Chiesa globale in lingua inglese.",
+    "note": "Fondata da John L. Allen Jr., riferimento della vaticanologia anglofona.",
+    "reliability": 4
+  },
+  "The Pillar": {
+    "full_name": "The Pillar",
+    "type": "testata_cattolica",
+    "country": "US",
+    "ownership": "Indipendente",
+    "authority": 4,
+    "authority_score": 4,
+    "scope": "Giornalismo investigativo su Chiesa e diritto canonico.",
+    "note": "Fondata da due canonisti (JD Flynn, Ed Condon): copertura tecnica del diritto canonico rara nel panorama giornalistico.",
+    "reliability": 4
+  },
+  "AgenSIR": {
+    "full_name": "SIR — Servizio Informazione Religiosa",
+    "type": "agenzia_cattolica_ufficiale",
+    "country": "IT",
+    "ownership": "Conferenza Episcopale Italiana (CEI)",
+    "authority": 4,
+    "authority_score": 4,
+    "scope": "Agenzia ufficiale della CEI: Chiesa in Italia, diocesi, rapporti Stato-Chiesa.",
+    "note": "Voce ufficiosa dell'episcopato italiano.",
+    "reliability": 4
+  },
+  "SettimanaNews": {
+    "full_name": "SettimanaNews",
+    "type": "testata_cattolica",
+    "country": "IT",
+    "ownership": "Dehoniani (Centro Editoriale Dehoniano)",
+    "authority": 3,
+    "authority_score": 3,
+    "scope": "Approfondimento teologico, pastorale ed ecclesiale.",
+    "reliability": 4
+  },
+  "Adista": {
+    "full_name": "Adista — Notizie e documentazione sul mondo cattolico",
+    "type": "testata_cattolica",
+    "country": "IT",
+    "ownership": "Coop. Adista",
+    "authority": 3,
+    "authority_score": 3,
+    "scope": "Informazione critica sul mondo cattolico ed ecclesiale.",
+    "note": "Storica agenzia di area progressista, forte su documentazione.",
+    "reliability": 3
+  },
+  "Riforma.it (Valdesi/Protestanti)": {
+    "full_name": "Riforma — Notiziario delle chiese evangeliche battiste, metodiste e valdesi",
+    "type": "testata_confessionale",
+    "country": "IT",
+    "ownership": "Unione delle chiese metodiste e valdesi",
+    "authority": 4,
+    "authority_score": 4,
+    "scope": "Protestantesimo italiano, intese ex art. 8 Cost., libertà religiosa.",
+    "note": "Voce ufficiale dell'area valdese-metodista, parte delle confessioni con intesa.",
+    "reliability": 4
+  },
+  "Moked (Ebraismo — UCEI)": {
+    "full_name": "Moked — Portale dell'ebraismo italiano",
+    "type": "testata_confessionale",
+    "country": "IT",
+    "ownership": "Unione delle Comunità Ebraiche Italiane (UCEI)",
+    "authority": 4,
+    "authority_score": 4,
+    "scope": "Ebraismo italiano, intesa L. 101/1989, vita delle comunità.",
+    "note": "Organo ufficiale UCEI.",
+    "reliability": 4
+  },
+  "UAAR Ultimissime": {
+    "full_name": "UAAR — Unione degli Atei e degli Agnostici Razionalisti",
+    "type": "associazione",
+    "country": "IT",
+    "ownership": "UAAR APS",
+    "authority": 2,
+    "authority_score": 2,
+    "scope": "Laicità dello Stato, contenzioso su simboli religiosi, 8 per mille.",
+    "note": "Punto di vista laicista dichiarato: utile come contraltare, non come fonte neutrale.",
+    "reliability": 3
+  },
+  "Religion News Service": {
+    "full_name": "Religion News Service",
+    "type": "agenzia_religiosa",
+    "country": "US",
+    "ownership": "Religion News Foundation",
+    "authority": 4,
+    "authority_score": 4,
+    "scope": "Tutte le religioni nel mondo, taglio giornalistico laico.",
+    "note": "La più antica agenzia specializzata in informazione religiosa (1934).",
+    "reliability": 4
+  },
+  "Catholic News Agency": {
+    "full_name": "Catholic News Agency / EWTN News",
+    "type": "agenzia_cattolica",
+    "country": "US",
+    "ownership": "EWTN News",
+    "authority": 4,
+    "authority_score": 4,
+    "scope": "Chiesa cattolica nel mondo, in lingua inglese.",
+    "reliability": 4
+  },
+  "Google News": {
+    "full_name": "Google News (ricerche tematiche)",
+    "type": "aggregatore",
+    "country": "INT",
+    "ownership": "Google LLC",
+    "authority": 2,
+    "authority_score": 2,
+    "scope": "Copertura ampia su query tematiche canonico-ecclesiastiche; l'autorità dipende dalla testata di origine risolta.",
+    "note": "Valutare sempre la fonte originale risolta dal gnews-resolver.",
+    "reliability": 3
+  }
+}

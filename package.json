@@ -1,0 +1,24 @@
+{
+  "name": "edicola-ecclesiastica",
+  "version": "1.0.0",
+  "description": "Edicola Ecclesiastica — Diritto canonico, vaticano ed ecclesiastico. Clone tematico di Edicola Giuridica.",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.81.0",
+    "@mozilla/readability": "^0.6.0",
+    "@vitalets/google-translate-api": "^9.2.1",
+    "@xmldom/xmldom": "^0.8.11",
+    "better-sqlite3": "^12.8.0",
+    "fast-xml-parser": "^5.5.6",
+    "jsdom": "^29.0.1",
+    "puppeteer": "^24.42.0",
+    "puppeteer-core": "^24.40.0"
+  }
+}

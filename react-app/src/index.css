@@ -1,0 +1,177 @@
+/* ── CSS VARIABLES (default = dark) ── */
+:root {
+  --eg-bg: #0F1114;
+  --eg-surface: #1A1D23;
+  --eg-surface-hover: #22262E;
+  --eg-border: #2A2E37;
+  --eg-accent: #C8A96E;
+  --eg-accent-dim: #8B7744;
+  --eg-text: #E8E4DD;
+  --eg-text-muted: #8A8680;
+  --eg-text-dim: #5C5955;
+  --eg-danger: #C45C5C;
+  --eg-success: #4A9960;
+  --eg-trending: #D4A053;
+}
+
+/* ── TRANSITION FLUIDA ── */
+*, *::before, *::after {
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.15s ease, box-shadow 0.2s ease;
+}
+img, video, svg, button > span { transition: none !important; }
+
+body { margin: 0; background: var(--eg-bg); }
+* { box-sizing: border-box; }
+p { margin: 0; }
+
+/* ── ANIMATIONS ── */
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--eg-border); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: var(--eg-accent-dim); }
+.filter-bar { scrollbar-width: none; -ms-overflow-style: none; }
+.filter-bar::-webkit-scrollbar { display: none; }
+
+/* ── LAYOUT BASE (mobile-first) ── */
+.eg-app {
+  display: flex;
+  min-height: 100vh;
+  background: var(--eg-bg);
+  color: var(--eg-text);
+  font-family: Inter, -apple-system, sans-serif;
+}
+/* Sidebar sinistra dismessa: la navigazione vive nell'header (desktop) e nella bottom-nav (mobile) */
+.eg-sidebar { display: none !important; }
+.eg-right-panel { display: none !important; }
+.eg-mobile-nav { display: flex; }        /* mobile-first: bottom nav visibile di default */
+.eg-header-nav { display: none; }        /* nav orizzontale nell'header: solo desktop */
+.eg-main-col { flex: 1; min-width: 0; display: flex; flex-direction: column; padding-bottom: 72px; }
+
+/* ── SIDEBAR THEMED ── */
+.eg-sidebar > aside,
+.eg-right-panel > aside {
+  background: var(--eg-surface) !important;
+  border-color: var(--eg-border) !important;
+}
+
+/* ── NEWS CARD THEMED ── */
+.eg-card {
+  background: var(--eg-surface);
+  border: 1px solid var(--eg-border);
+  border-radius: 10px;
+  overflow: hidden;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  cursor: pointer;
+}
+.eg-card:hover {
+  border-color: var(--eg-accent);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+}
+
+/* ── HEADER/TOPBAR THEMED ── */
+.eg-topbar {
+  background: var(--eg-surface) !important;
+  border-bottom-color: var(--eg-border) !important;
+}
+
+/* ── DESKTOP (> 768px): nav nell'header, niente bottom-nav ── */
+@media (min-width: 769px) {
+  .eg-header-nav { display: flex !important; }
+  .eg-mobile-nav { display: none !important; }
+  .eg-main-col { padding-bottom: 0; }
+}
+
+/* ── DESKTOP LARGO (≥ 1024px): mostra anche il pannello destro ── */
+@media (min-width: 1024px) {
+  .eg-right-panel { display: flex !important; flex-shrink: 0; }
+}
+
+/* ── READER PANEL ── */
+.eg-reader-panel {
+  position: fixed;
+  inset: 0;
+  z-index: 300;
+  background: var(--eg-bg);
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
+
+@media (min-width: 900px) {
+  .eg-reader-panel {
+    background: rgba(0,0,0,0.5);
+    flex-direction: row;
+    align-items: stretch;
+  }
+  .eg-reader-inner {
+    width: 65%;
+    max-width: 860px;
+    margin-left: auto;
+    background: var(--eg-bg) !important;
+    box-shadow: -12px 0 60px rgba(0,0,0,0.5);
+    overflow-y: auto;
+    height: 100vh;
+  }
+}
+@media (max-width: 899px) {
+  .eg-reader-inner {
+    width: 100%;
+    background: var(--eg-bg) !important;
+  }
+}
+
+/* ── NEWS GRID ── */
+.news-grid {
+  display: grid;
+  gap: 16px;
+  padding: 16px;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr));
+}
+
+/* ── FILTER PILLS ── */
+.eg-pill {
+  background: var(--eg-surface);
+  border: 1px solid var(--eg-border);
+  color: var(--eg-text-muted);
+  border-radius: 20px;
+  padding: 5px 14px;
+  font-size: 12px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s;
+}
+.eg-pill:hover { border-color: var(--eg-accent); color: var(--eg-text); }
+.eg-pill.active {
+  background: var(--eg-accent);
+  border-color: var(--eg-accent);
+  color: #fff;
+  font-weight: 700;
+}
+
+/* ── INPUT SEARCH ── */
+.eg-search-input {
+  background: var(--eg-surface-hover) !important;
+  color: var(--eg-text) !important;
+  border: none;
+  outline: none;
+}
+.eg-search-input::placeholder { color: var(--eg-text-dim); }
+
+/* ── TOPBAR LOGO ── sempre visibile (accanto alla nav) */
+.eg-topbar-logo { display: flex; align-items: center; }
+
+/* ── NAV HEADER (desktop) ── */
+.eg-header-nav { align-items: center; gap: 2px; flex: 1; min-width: 0; overflow: hidden; }
+.eg-nav-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: transparent; border: none; cursor: pointer;
+  padding: 7px 12px; border-radius: 8px;
+  font-size: 13px; font-weight: 600; white-space: nowrap;
+  color: var(--eg-text-muted);
+}
+.eg-nav-btn:hover { background: var(--eg-surface-hover); color: var(--eg-text); }
+.eg-nav-btn.active { background: var(--eg-accent); color: #fff; }
+.eg-nav-btn.active svg { color: #fff; }

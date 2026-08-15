@@ -1,0 +1,14 @@
+# robots.txt — Edicola Mondo
+# https://edicolamondo.com/robots.txt
+
+User-agent: *
+Allow: /
+Allow: /manifesto
+Allow: /tema/
+
+# Blocca endpoint API interni
+Disallow: /api/
+Disallow: /dashboard
+
+# Sitemap
+Sitemap: https://edicolamondo.com/sitemap.xml

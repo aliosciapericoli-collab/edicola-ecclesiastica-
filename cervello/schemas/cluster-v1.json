@@ -1,0 +1,86 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://edicolagiuridica.it/schemas/cluster-v1.json",
+  "title": "Cluster v1.0",
+  "description": "Cluster tematico di casi penali simili con statistiche aggregate di esiti e strategie ricorrenti.",
+  "type": "object",
+  "required": ["cluster_id", "nome_umano", "taxonomy", "numerosita_corpus", "statistiche_esiti"],
+  "properties": {
+    "cluster_id": {"type": "string"},
+    "nome_umano": {"type": "string", "maxLength": 200},
+    "taxonomy": {
+      "type": "object",
+      "required": ["macro_area", "norma_primaria_canonica", "fase_processuale", "motivo_principale"],
+      "properties": {
+        "macro_area": {"type": "string", "enum": ["patrimonio", "persona", "stato", "stupefacenti", "pa", "economia", "altro"]},
+        "norma_primaria_canonica": {"type": "string"},
+        "fase_processuale": {"type": "string", "enum": ["indagini", "cautelare", "riesame", "primo_grado", "appello", "legittimita", "esecuzione", "sorveglianza"]},
+        "motivo_principale": {"type": "string", "enum": ["violazione_legge", "vizio_motivazione", "travisamento_prova", "inosservanza_norma_proc", "altro"]},
+        "sottotema_libero": {"type": "string", "maxLength": 100}
+      }
+    },
+    "numerosita_corpus": {"type": "integer", "minimum": 0},
+    "periodo_copertura": {
+      "type": "object",
+      "properties": {
+        "da": {"type": "string", "pattern": "^[0-9]{4}$"},
+        "a": {"type": "string", "pattern": "^[0-9]{4}$"}
+      }
+    },
+    "statistiche_esiti": {
+      "type": "object",
+      "description": "Frequenze normalizzate, somma attesa ≈ 1.0",
+      "properties": {
+        "accoglimento_integrale": {"type": "number", "minimum": 0, "maximum": 1},
+        "accoglimento_parziale": {"type": "number", "minimum": 0, "maximum": 1},
+        "riqualificazione": {"type": "number", "minimum": 0, "maximum": 1},
+        "rigetto": {"type": "number", "minimum": 0, "maximum": 1},
+        "inammissibilita": {"type": "number", "minimum": 0, "maximum": 1},
+        "annullamento_con_rinvio": {"type": "number", "minimum": 0, "maximum": 1},
+        "annullamento_senza_rinvio": {"type": "number", "minimum": 0, "maximum": 1}
+      }
+    },
+    "strategie_ricorrenti": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["etichetta", "tasso_successo_empirico"],
+        "properties": {
+          "etichetta": {"type": "string", "maxLength": 200},
+          "frequenza_nel_cluster": {"type": "number", "minimum": 0, "maximum": 1},
+          "tasso_successo_empirico": {"type": "number", "minimum": 0, "maximum": 1},
+          "intervallo_confidenza": {
+            "type": "object",
+            "properties": {
+              "lower": {"type": "number"},
+              "upper": {"type": "number"}
+            }
+          },
+          "esempi_sentenze_ids": {"type": "array", "items": {"type": "string"}, "maxItems": 5},
+          "norme_coinvolte": {"type": "array", "items": {"type": "string"}}
+        }
+      }
+    },
+    "sentenze_rappresentative": {"type": "array", "items": {"type": "string"}, "maxItems": 10},
+    "norme_frequenti": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "norma": {"type": "string"},
+          "freq": {"type": "number", "minimum": 0, "maximum": 1}
+        }
+      }
+    },
+    "contrasti_correlati": {"type": "array", "items": {"type": "string"}},
+    "evoluzione_temporale": {
+      "type": "object",
+      "properties": {
+        "trend_significativi": {"type": "array", "items": {"type": "string"}}
+      }
+    },
+    "centroid_embedding_id": {"type": ["string", "null"]},
+    "ultimo_aggiornamento": {"type": "string", "format": "date-time"},
+    "aggiornato_con_n_sentenze": {"type": "integer", "minimum": 0}
+  }
+}
