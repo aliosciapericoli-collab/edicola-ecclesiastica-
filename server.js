@@ -3338,17 +3338,29 @@ http.createServer((req, res) => {
       // l'endpoint restituiva TUTTI gli atti, cosa sostenibile con 33 righe e non con ~150.000
       // (decine di MB per richiesta, e altrettante card renderizzate dalla UI).
       const limite = Math.min(Math.max(parseInt(parsedUrl.searchParams.get('limit') || '200', 10) || 200, 1), 500);
-      const totale_atti = ndb.prepare('SELECT COUNT(*) AS n FROM atti WHERE n_articoli > 0').get().n;
+      // Filtro per ramo del corpus ecclesiastico (canonico | vaticano |
+      // ecclesiastico_it | magistero) — colonna `ordinamento` degli atti.
+      const ordinamento = (parsedUrl.searchParams.get('ordinamento') || '').trim();
+      const whereOrd = ordinamento ? ' AND ordinamento = ?' : '';
+      const args = ordinamento ? [ordinamento] : [];
+      const totale_atti = ndb.prepare('SELECT COUNT(*) AS n FROM atti WHERE n_articoli > 0' + whereOrd).get(...args).n;
       const atti = ndb.prepare(`
-        SELECT urn, tipo, numero, anno, titolo, url_fonte, n_articoli
-        FROM atti WHERE n_articoli > 0 ORDER BY anno DESC, numero DESC LIMIT ?
-      `).all(limite);
+        SELECT urn, tipo, numero, anno, titolo, url_fonte, n_articoli, ordinamento
+        FROM atti WHERE n_articoli > 0${whereOrd} ORDER BY anno DESC, numero DESC LIMIT ?
+      `).all(...args, limite);
+      // Conteggi per ramo (per le card della pagina Codici)
+      let per_ordinamento = [];
+      try {
+        per_ordinamento = ndb.prepare(
+          'SELECT ordinamento, COUNT(*) AS atti, SUM(n_articoli) AS unita FROM atti WHERE n_articoli > 0 GROUP BY ordinamento'
+        ).all();
+      } catch(e) {}
       let pending = 0;
       try { pending = ndb.prepare("SELECT COUNT(*) AS n FROM coda_priorita WHERE stato='pending'").get().n; } catch(e) {}
       res.end(JSON.stringify({
         ok: true, stato: totale_atti ? 'attivo' : 'in_costruzione',
         totale_atti, mostrati: atti.length, limite,
-        in_costruzione: pending > 0, pending, atti,
+        in_costruzione: pending > 0, pending, atti, per_ordinamento,
       }));
     } catch(e) { res.end(JSON.stringify({ ok: false, error: e.message, atti: [] })); }
 

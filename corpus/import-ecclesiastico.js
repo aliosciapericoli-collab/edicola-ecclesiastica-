@@ -58,6 +58,22 @@ const SEEDS = [
   // ── Norme collegate ──
   ["urn:nir:stato:legge:2003-07-01;206", "L. 206/2003 — Riconoscimento della funzione sociale degli oratori", 30],
   ["urn:nir:stato:decreto.legislativo:2017-07-03;117", "D.Lgs. 117/2017 — Codice del Terzo settore (rilevante per gli enti religiosi)", 31],
+  // ── Fondamenta e legislazione del 1929 (matrimonio ed enti) ──
+  ["urn:nir:stato:costituzione:1947-12-27", "Costituzione della Repubblica (artt. 2, 3, 7, 8, 19, 20, 117)", 0],
+  ["urn:nir:stato:legge:1929-05-27;847", "L. 847/1929 — Applicazione del Concordato: matrimonio", 7],
+  ["urn:nir:stato:legge:1929-05-27;848", "L. 848/1929 — Enti ecclesiastici e amministrazioni civili dei patrimoni di culto", 8],
+  // ── Libertà religiosa: fonti internazionali recepite ──
+  ["urn:nir:stato:legge:1955-08-04;848", "L. 848/1955 — Ratifica CEDU (art. 9: libertà di pensiero, coscienza e religione)", 9],
+  // ── 8 per mille e regolamenti attuativi ──
+  ["urn:nir:stato:decreto.del.presidente.della.repubblica:1998-03-10;76", "D.P.R. 76/1998 — Regolamento 8 per mille a diretta gestione statale", 25],
+  // ── Modifiche successive alle intese ──
+  ["urn:nir:stato:legge:2009-06-08;68", "L. 68/2009 — Modifica intesa Tavola valdese", 26],
+  ["urn:nir:stato:legge:2012-03-12;34", "L. 34/2012 — Modifica intesa UCEBI (battisti)", 27],
+  // ── Persone giuridiche e fisco degli enti religiosi ──
+  ["urn:nir:stato:decreto.del.presidente.della.repubblica:2000-02-10;361", "D.P.R. 361/2000 — Riconoscimento delle persone giuridiche private", 32],
+  ["urn:nir:stato:decreto.legislativo:1997-12-04;460", "D.Lgs. 460/1997 — ONLUS ed enti non commerciali (enti religiosi)", 33],
+  // ── Beni culturali di interesse religioso ──
+  ["urn:nir:stato:decreto.legislativo:2004-01-22;42", "D.Lgs. 42/2004 — Codice dei beni culturali (art. 9: beni di interesse religioso)", 40],
 ];
 
 function seed(db) {

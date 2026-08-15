@@ -4198,9 +4198,18 @@ function PageTrending() {
 }
 
 // ─── PAGINA NORME (codici e leggi) — self-contained, usa /api/norme/* ──────
+// Rami del corpus ecclesiastico mostrati nella pagina Codici, nell'ordine.
+const RAMI_CORPUS = [
+  { id:'canonico',         label:'Diritto Canonico',                          desc:'Codice di Diritto Canonico (CIC 1983) e Codice dei Canoni delle Chiese Orientali (CCEO 1990)' },
+  { id:'ecclesiastico_it', label:'Stato e Chiese — Leggi italiane',           desc:'Patti Lateranensi, Accordo di Villa Madama, enti ecclesiastici, culti ammessi e intese ex art. 8 Cost.' },
+  { id:'vaticano',         label:'Leggi dello Stato della Città del Vaticano', desc:'Legge fondamentale, leggi e decreti dello SCV' },
+  { id:'magistero',        label:'Magistero Pontificio',                      desc:'Motu proprio, costituzioni apostoliche, encicliche ed esortazioni' },
+];
+
 function PageNorme() {
   const [codici, setCodici] = useState([]);
-  const [atti, setAtti] = useState([]);          // corpus Normativa: leggi e decreti
+  const [atti, setAtti] = useState([]);          // (legacy, non usato dalla vista a rami)
+  const [rami, setRami] = useState({});          // { canonico: {atti,totale}, ... }
   const [attiInfo, setAttiInfo] = useState({ in_costruzione: false, pending: 0, totale: 0 });
   const [stato, setStato] = useState('loading'); // loading | attivo | in_costruzione | errore
   const [tot, setTot] = useState({ codici: 0, articoli: 0, atti: 0 });
@@ -4226,11 +4235,19 @@ function PageNorme() {
         } else { setStato('in_costruzione'); }
       })
       .catch(() => setStato('errore'));
-    // Corpus Normativa (leggi e decreti) — gruppo separato, non blocca la sezione.
-    fetch(API + '/api/norme/atti')
-      .then(r => r.json())
-      .then(d => { if (d && d.ok) { setAtti(d.atti || []); setAttiInfo({ in_costruzione: !!d.in_costruzione, pending: d.pending || 0, totale: d.totale_atti || 0 }); } })
-      .catch(() => {});
+    // Corpus ecclesiastico — un fetch per ramo (canonico, Stato-Chiese,
+    // vaticano, magistero); ogni ramo diventa una sezione della pagina.
+    RAMI_CORPUS.forEach((ramo) => {
+      fetch(API + '/api/norme/atti?ordinamento=' + ramo.id + '&limit=60')
+        .then(r => r.json())
+        .then(d => {
+          if (d && d.ok) {
+            setRami(prev => ({ ...prev, [ramo.id]: { atti: d.atti || [], totale: d.totale_atti || 0, pending: d.pending || 0 } }));
+            setAttiInfo(prev => ({ in_costruzione: prev.in_costruzione || !!d.in_costruzione, pending: d.pending || prev.pending, totale: prev.totale + (d.totale_atti || 0) }));
+          }
+        })
+        .catch(() => {});
+    });
   }, []);
 
   const openAtto = (a) => {
@@ -4498,28 +4515,34 @@ function PageNorme() {
         ))}
       </div>
 
-      {atti.length > 0 && (
-        <>
-          <GroupTitle>Leggi e decreti <span style={{ color: 'var(--eg-text-dim)', fontWeight: 500, textTransform: 'none', letterSpacing: 0 }}>
-            {attiInfo.totale > atti.length ? `· i ${atti.length} più recenti su ${attiInfo.totale.toLocaleString('it-IT')} — usa la ricerca per gli altri` : ''}
-            {attiInfo.in_costruzione ? ' · in aggiornamento' : ''}
-          </span></GroupTitle>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(260px,1fr))', gap: 10 }}>
-            {atti.map((a) => (
-              <div key={a.urn} onClick={() => openAtto(a)}
-                style={{ ...card, padding: '14px 16px', cursor: 'pointer' }}
-                onMouseEnter={e => e.currentTarget.style.background = 'var(--eg-surface-hover)'}
-                onMouseLeave={e => e.currentTarget.style.background = 'var(--eg-surface)'}>
-                <div style={{ fontSize: 14.5, fontWeight: 700, color: 'var(--eg-text)', lineHeight: 1.3 }}>{a.titolo || `${a.tipo} ${a.numero}/${a.anno}`}</div>
-                <div style={{ fontSize: 11.5, color: 'var(--eg-text-dim)', marginTop: 6, display: 'flex', gap: 8 }}>
-                  <span style={{ fontFamily: 'monospace' }}>{a.numero ? `${a.tipo || ''} ${a.numero}/${a.anno || ''}`.trim() : (a.tipo || '')}</span>
-                  <span>{(a.n_articoli || 0).toLocaleString('it-IT')} articoli</span>
+      {RAMI_CORPUS.map((ramo) => {
+        const r = rami[ramo.id];
+        if (!r || !r.atti || r.atti.length === 0) return null;
+        return (
+          <React.Fragment key={ramo.id}>
+            <GroupTitle>{ramo.label} <span style={{ color: 'var(--eg-text-dim)', fontWeight: 500, textTransform: 'none', letterSpacing: 0 }}>
+              {' · ' + r.totale.toLocaleString('it-IT') + (r.totale === 1 ? ' atto' : ' atti')}
+              {r.totale > r.atti.length ? ` (mostrati i ${r.atti.length} più recenti — usa la ricerca per gli altri)` : ''}
+              {r.pending > 0 ? ' · in aggiornamento' : ''}
+            </span></GroupTitle>
+            <div style={{ fontSize: 12, color: 'var(--eg-text-muted)', margin: '-4px 0 10px' }}>{ramo.desc}</div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(260px,1fr))', gap: 10 }}>
+              {r.atti.map((a) => (
+                <div key={a.urn} onClick={() => openAtto(a)}
+                  style={{ ...card, padding: '14px 16px', cursor: 'pointer' }}
+                  onMouseEnter={e => e.currentTarget.style.background = 'var(--eg-surface-hover)'}
+                  onMouseLeave={e => e.currentTarget.style.background = 'var(--eg-surface)'}>
+                  <div style={{ fontSize: 14.5, fontWeight: 700, color: 'var(--eg-text)', lineHeight: 1.3 }}>{a.titolo || `${a.tipo} ${a.numero}/${a.anno}`}</div>
+                  <div style={{ fontSize: 11.5, color: 'var(--eg-text-dim)', marginTop: 6, display: 'flex', gap: 8 }}>
+                    <span style={{ fontFamily: 'monospace' }}>{a.numero ? `${a.tipo || ''} ${a.numero}/${a.anno || ''}`.trim() : (a.tipo || '')}</span>
+                    <span>{(a.n_articoli || 0).toLocaleString('it-IT')} {a.ordinamento === 'canonico' ? 'canoni' : 'articoli'}</span>
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
-        </>
-      )}
+              ))}
+            </div>
+          </React.Fragment>
+        );
+      })}
     </div>
   );
 }
@@ -7779,8 +7802,8 @@ const TAB_SVGS = {
 // Sprint 1 — app ridotta a due sezioni: Notizie + Cassazione (+ Info/Manifesto).
 const TABS = [
   { id:"notizie", label:"Notizie" },
-  { id:"cassazione", label:"Cassaz." },
-  { id:"norme", label:"Norme" },
+  { id:"cassazione", label:"Giurispr." },
+  { id:"norme", label:"Codici" },
   { id:"info", label:"Info" },
 ];
 
@@ -7788,8 +7811,8 @@ const TABS = [
 // `label` = etichetta piena (header desktop); `short` = etichetta compatta (bottom-nav a 390px).
 const NAV_ITEMS = [
   { id:"notizie",    label:"Notizie",    short:"Notizie" },
-  { id:"cassazione", label:"Cassazione", short:"Cassaz." },
-  { id:"norme",      label:"Norme",      short:"Norme" },
+  { id:"cassazione", label:"Giurisprudenza", short:"Giur." },
+  { id:"norme",      label:"Codici",     short:"Codici" },
   { id:"info",       label:"Manifesto",  short:"Manif." },
   { id:"guida",      label:"Guida",      short:"Guida" },
 ];
@@ -7798,8 +7821,8 @@ const NAV_ITEMS = [
 function SidebarNav({ activeTab, setActiveTab }) {
   const ITEMS = [
     { id:"notizie", label:"Notizie", desc:"Feed live", svg: <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2Zm0 0a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2"/><path d="M18 14h-8"/><path d="M15 18h-5"/><path d="M10 6h8v4h-8V6Z"/></svg> },
-    { id:"cassazione", label:"Cassazione", desc:"Sentenze e ordinanze", svg: <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg> },
-    { id:"norme", label:"Norme", desc:"Codici e leggi", svg: <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg> },
+    { id:"cassazione", label:"Giurisprudenza", desc:"Sentenze in materia ecclesiastica", svg: <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg> },
+    { id:"norme", label:"Codici", desc:"CIC, CCEO, leggi vaticane e italiane", svg: <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg> },
     { id:"info", label:"Manifesto", desc:"Chi siamo", svg: <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg> },
   ];
   return (

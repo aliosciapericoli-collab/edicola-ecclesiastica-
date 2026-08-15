@@ -30,7 +30,14 @@ const TIPI = [
   ["apost_constitutions", "COSTITUZIONE APOSTOLICA", 200],
   ["encyclicals", "ENCICLICA", 300],
   ["apost_exhortations", "ESORTAZIONE APOSTOLICA", 400],
+  ["apost_letters", "LETTERA APOSTOLICA", 500],
 ];
+
+// Documenti del Concilio Vaticano II (costituzioni, decreti, dichiarazioni) —
+// indice dedicato fuori dallo schema /content/<pontefice>/.
+const CONCILIO_BASE = "https://www.vatican.va/archive/hist_councils/ii_vatican_council/";
+const CONCILIO_INDEX = CONCILIO_BASE + "index_it.htm";
+const CONCILIO_TIPI = { const: "COSTITUZIONE CONCILIARE", decree: "DECRETO CONCILIARE", decl: "DICHIARAZIONE CONCILIARE" };
 
 function slugDaUrl(url) {
   return url.split("/").pop().replace(/\.html$/, "");
@@ -82,6 +89,18 @@ async function costruisciCoda(db) {
       await sleep(300);
     }
   }
+  // Concilio Vaticano II — 16 documenti (rank 50: prima di tutto il resto)
+  try {
+    const idx = fetchHtml(CONCILIO_INDEX);
+    for (const m of idx.matchAll(/href="(?:[^"]*\/)?documents\/(vat-ii_(const|decree|decl)_[^"]+_it\.html)"/g)) {
+      const url = CONCILIO_BASE + "documents/" + m[1];
+      const urn = `urn:vatican:magistero:concilio-vaticano-ii:${slugDaUrl(url)}`;
+      if (!visti.has(urn)) visti.set(urn, { url, tipo: CONCILIO_TIPI[m[2]] || "DOCUMENTO CONCILIARE", pope: "concilio-vaticano-ii", rank: 50 });
+    }
+  } catch (e) {
+    console.warn(`[MAG] Concilio Vaticano II non raggiungibile: ${e.message.split("\n")[0]}`);
+  }
+
   for (const [urn, v] of visti) {
     store.enqueue(db, {
       urn,
