@@ -7768,9 +7768,9 @@ function PageManifesto() {
     muted:      { fontSize:13, color:"var(--eg-text-muted)", lineHeight:1.75, margin:"0 0 8px 0" },
   };
   const MODULI = [
-    ["Notizie",    <>L'unico aggregatore AI d'Italia dedicato al diritto: <strong style={{color:"var(--eg-accent)"}}>{fontiPh}</strong> fonti — testate giuridiche, istituzioni, corti, autorità — lette, deduplicate e ordinate ogni ora.</>],
-    ["Cassazione", <>L'archivio delle sentenze civili e penali della Corte, costruito dalle fonti ufficiali, con ricerca full-text: <strong style={{color:"var(--eg-accent)"}}>{sentenzePh}</strong> provvedimenti, e cresce ogni notte.</>],
-    ["Norme",      <>Codici e leggi, collegati alle notizie e alla giurisprudenza: <strong style={{color:"var(--eg-accent)"}}>{articoliPh}</strong> articoli consultabili.</>],
+    ["Notizie",        <>L'unico aggregatore AI d'Italia dedicato a Chiesa e religioni: <strong style={{color:"var(--eg-accent)"}}>{fontiPh}</strong> fonti — Santa Sede, agenzie cattoliche, voci delle confessioni, stampa internazionale tradotta in italiano — lette, deduplicate e ordinate ogni ora.</>],
+    ["Codici",         <>Il corpus del diritto della Chiesa e dei suoi rapporti con lo Stato: Codice di Diritto Canonico, CCEO, leggi vaticane, Patti Lateranensi e tutte le intese ex art. 8 Cost., più il magistero pontificio — <strong style={{color:"var(--eg-accent)"}}>{articoliPh}</strong> canoni e articoli ricercabili parola per parola.</>],
+    ["Giurisprudenza", <>Le sentenze della Cassazione in materia ecclesiastica — matrimonio concordatario, enti religiosi, 8×mille, libertà di culto: <strong style={{color:"var(--eg-accent)"}}>{sentenzePh}</strong> provvedimenti dal corpus ufficiale.</>],
   ];
 
   return (
@@ -7783,11 +7783,11 @@ function PageManifesto() {
           Edicola Ecclesiastica
         </h1>
         <p style={{ fontSize:15, color:"var(--eg-text-muted)", lineHeight:1.6, margin:0, maxWidth:480, marginLeft:"auto", marginRight:"auto", fontStyle:"italic" }}>
-          Facciamo poche cose. Le facciamo meglio di chiunque altro.
+          Chiesa, Diritto e Società. La prima testata dedicata al diritto canonico, vaticano ed ecclesiastico.
         </p>
         {/* Stat hero — numeri reali */}
         <div style={{ display:"flex", justifyContent:"center", gap:28, marginTop:26, flexWrap:"wrap" }}>
-          {[[fontiPh,"fonti"],[sentenzePh,"sentenze Cassazione"],[articoliPh,"articoli dei codici"]].map(([val,lab],i)=>(
+          {[[fontiPh,"fonti"],[sentenzePh,"sentenze ecclesiastiche"],[articoliPh,"canoni e articoli"]].map(([val,lab],i)=>(
             <div key={i} style={{ textAlign:"center" }}>
               <div style={{ fontSize:22, fontWeight:800, color:"var(--eg-accent)", lineHeight:1, fontFamily:"monospace" }}>{val}</div>
               <div style={{ fontSize:10, color:"var(--eg-text-dim)", textTransform:"uppercase", letterSpacing:"0.08em", marginTop:6 }}>{lab}</div>
@@ -7813,7 +7813,7 @@ function PageManifesto() {
         {[
           [<><strong style={{color:"var(--eg-accent)"}}>Solo fonti ufficiali e pubbliche.</strong> Ogni documento porta il link all'originale.</>],
           [<><strong style={{color:"var(--eg-accent)"}}>Numeri veri.</strong> I contatori di questa pagina sono letti in tempo reale; se una sezione è in costruzione lo diciamo.</>],
-          [<><strong style={{color:"var(--eg-accent)"}}>Gratis.</strong> Gli atti dello Stato non hanno padroni (art. 5, legge sul diritto d'autore).</>],
+          [<><strong style={{color:"var(--eg-accent)"}}>Gratis.</strong> Il diritto — dello Stato e della Chiesa — dev'essere leggibile da tutti, non solo dagli addetti ai lavori.</>],
         ].map(([testo], i) => (
           <div key={i} style={{ fontSize:13, color:"var(--eg-text)", lineHeight:1.65, padding:"11px 0", borderBottom: i < 2 ? "1px solid var(--eg-border)" : "none" }}>{testo}</div>
         ))}
@@ -7838,13 +7838,13 @@ function PageManifesto() {
       <div style={S.card}>
         <div style={S.label}>Chi siamo</div>
         <p style={S.body}>
-          Edicola Ecclesiastica è un progetto italiano indipendente. Non siamo un editore. Aggreghiamo, analizziamo, colleghiamo: notizie, sentenze di Cassazione e testi normativi, sempre da fonti ufficiali e pubbliche.
+          Edicola Ecclesiastica è un progetto italiano indipendente, laico nel metodo e rigoroso nelle fonti. Aggreghiamo, traduciamo e colleghiamo: notizie su Chiesa e religioni, i codici del diritto canonico, le leggi vaticane, le intese tra lo Stato e le confessioni, la giurisprudenza ecclesiastica.
         </p>
         <p style={{ ...S.muted, marginBottom:12 }}>
-          Non vendiamo consulenze legali. Non sostituiamo avvocati. Costruiamo strumenti per chi lavora con il diritto.
+          Non vendiamo consulenze, né legali né canoniche. Costruiamo strumenti per canonisti, ecclesiasticisti, giornalisti religiosi, operatori pastorali — e per chiunque voglia capire il rapporto tra fede e diritto.
         </p>
-        <a href="mailto:info@edicolagiuridica.it" style={{ fontSize:12, color:"var(--eg-accent)", textDecoration:"none", fontWeight:600 }}>
-          info@edicolagiuridica.it →
+        <a href="mailto:info@edicolaecclesiastica.com" style={{ fontSize:12, color:"var(--eg-accent)", textDecoration:"none", fontWeight:600 }}>
+          info@edicolaecclesiastica.com →
         </a>
       </div>
 
