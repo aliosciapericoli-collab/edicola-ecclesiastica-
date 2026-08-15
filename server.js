@@ -869,15 +869,34 @@ async function translateBatchClaude(items, fromLang) {
 }
 
 // Cache persistente delle traduzioni (per URL) — evita di ritradurre lo stesso
-// articolo a ogni refresh dei feed (ogni 5 min).
+// articolo a ogni refresh dei feed (ogni 5 min). Salvata su disco
+// (data/traduzioni.json) così sopravvive ai riavvii: senza, ogni pm2 restart
+// ricostruiva tutto da capo e la home restava vuota per ~2 minuti.
 const _translCache = new Map();
 const TRANSL_CACHE_MAX = 4000;
+const TRANSL_CACHE_PATH = require('path').join(__dirname, 'data', 'traduzioni.json');
+try {
+  const salvate = JSON.parse(require('fs').readFileSync(TRANSL_CACHE_PATH, 'utf8'));
+  for (const [k, v] of salvate) _translCache.set(k, v);
+  console.log(`[Traduzioni] ${_translCache.size} traduzioni ricaricate da disco`);
+} catch (_) {}
+let _translDirty = false;
+function salvaTraduzioni() {
+  if (!_translDirty) return;
+  _translDirty = false;
+  try {
+    require('fs').mkdirSync(require('path').dirname(TRANSL_CACHE_PATH), { recursive: true });
+    require('fs').writeFileSync(TRANSL_CACHE_PATH, JSON.stringify([..._translCache]));
+  } catch (_) {}
+}
+setInterval(salvaTraduzioni, 60 * 1000).unref();
 function _translCacheSet(k, v) {
   if (_translCache.size >= TRANSL_CACHE_MAX) {
     const first = _translCache.keys().next().value;
     _translCache.delete(first);
   }
   _translCache.set(k, v);
+  _translDirty = true;
 }
 
 function postUrl(url, body, timeoutMs = 8000) {
