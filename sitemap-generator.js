@@ -13,8 +13,8 @@ const now = new Date().toISOString().slice(0, 10);
 
 // Pagine statiche sempre presenti
 const staticUrls = [
-  { loc: 'https://edicolaecclesiastica.it/', lastmod: now, changefreq: 'always', priority: '1.0' },
-  { loc: 'https://edicolaecclesiastica.it/manifesto', lastmod: '2026-03-21', changefreq: 'monthly', priority: '0.8' }
+  { loc: 'https://edicolaecclesiastica.com/', lastmod: now, changefreq: 'always', priority: '1.0' },
+  { loc: 'https://edicolaecclesiastica.com/manifesto', lastmod: '2026-03-21', changefreq: 'monthly', priority: '0.8' }
 ];
 
 // Pagine tema — quando esisteranno (da SQLite), aggiungerle qui
@@ -27,7 +27,7 @@ let themeUrls = [];
 //   const db = new Database('/home/work/edicola/data/edicola.db', { readonly: true });
 //   const themes = db.prepare('SELECT tema_id, updated_at FROM themes WHERE is_active = 1').all();
 //   themeUrls = themes.map(t => ({
-//     loc: 'https://edicolaecclesiastica.it/tema/' + encodeURIComponent(t.tema_id),
+//     loc: 'https://edicolaecclesiastica.com/tema/' + encodeURIComponent(t.tema_id),
 //     lastmod: t.updated_at ? t.updated_at.slice(0, 10) : now,
 //     changefreq: 'daily',
 //     priority: '0.7'

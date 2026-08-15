@@ -140,7 +140,7 @@ function httpsPost(hostname, path, body, timeoutMs = 60000) {
         'Accept':         'application/sparql-results+json',
         'Content-Type':   'application/x-www-form-urlencoded',
         'Content-Length': bodyBuf.length,
-        'User-Agent':     'EdicolaEcclesiastica/1.0 (+https://edicolaecclesiastica.it)',
+        'User-Agent':     'EdicolaEcclesiastica/1.0 (+https://edicolaecclesiastica.com)',
       },
     };
 

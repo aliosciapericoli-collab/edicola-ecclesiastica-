@@ -89,10 +89,10 @@ semplicemente salta e il resto funziona lo stesso.
 ### Esposizione web (Caddy)
 
 Aggiungere a `/etc/caddy/conf.d/custom.caddy` (dominio dedicato, es.
-`edicolaecclesiastica.it`, con DNS → 65.21.237.152):
+`edicolaecclesiastica.com`, con DNS → 65.21.237.152):
 
 ```caddy
-edicolaecclesiastica.it, www.edicolaecclesiastica.it {
+edicolaecclesiastica.com, www.edicolaecclesiastica.com {
     reverse_proxy localhost:3202
 }
 ```
@@ -121,6 +121,6 @@ node corpus/run-daily.js --stats                   # corpus
 - La pipeline AI (Scalata, dossier, Genio) usa la stessa `ANTHROPIC_API_KEY`
   del madre: i costi si sommano.
 - Il dominio di riferimento nel codice (SEO, sitemap, condivisioni) è
-  `edicolaecclesiastica.it`: se il dominio definitivo sarà un altro, cercare e
+  `edicolaecclesiastica.com`: se il dominio definitivo sarà un altro, cercare e
   sostituire quella stringa in `server.js`, `sitemap-generator.js`,
   `privacy.html`, `manifesto.html` e `react-app/src/App.jsx`.
