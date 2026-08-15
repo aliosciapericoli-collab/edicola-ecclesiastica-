@@ -3128,6 +3128,14 @@ http.createServer((req, res) => {
     try { const cdb = getCorpusBB(); if (cdb) sentenze_corpus = cdb.prepare('SELECT COUNT(*) AS n FROM sentenze').get().n; } catch(e) {}
     let articoli_norme = null;
     try { const gdb = getCodiciBB(); if (gdb) articoli_norme = gdb.prepare('SELECT COUNT(*) AS n FROM articoli_codice').get().n; } catch(e) {}
+    // Corpus ecclesiastico: canoni e articoli vivono in normativa.db (atti.n_articoli)
+    try {
+      const ndb = getNormativaBB();
+      if (ndb) {
+        const c = ndb.prepare('SELECT COALESCE(SUM(n_articoli),0) AS n FROM atti').get().n;
+        articoli_norme = (articoli_norme || 0) + c;
+      }
+    } catch(e) {}
     getManifestoNovita((novita) => {
       res.end(JSON.stringify({ fonti_attive, sentenze_corpus, articoli_norme, novita: novita || [] }));
     });
