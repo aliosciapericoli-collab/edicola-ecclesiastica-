@@ -11,7 +11,7 @@ const { execFileSync } = require("child_process");
 
 const HOST = "www.normattiva.it";
 const API_HOST = "api.normattiva.it";
-const UA = "EdicolaGiuridica-Archiver/1.0";
+const UA = "EdicolaEcclesiastica-Archiver/1.0";
 const PERMALINK = (urn) => `https://${HOST}/uri-res/N2Ls?${urn}`;
 const OPENDATA = `https://${API_HOST}/t/normattiva.api/bff-opendata/v1/api/v1`;
 const API_DETTAGLIO = `${OPENDATA}/atto/dettaglio-atto-urn`;

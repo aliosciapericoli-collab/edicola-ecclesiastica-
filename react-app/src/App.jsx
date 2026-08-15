@@ -723,7 +723,7 @@ function NewsCard({ item, onOpenArticolo }) {
           }}>
             <span>▲</span><span>Leggi e Scala</span>
           </div>
-          <button onClick={() => share(item.title || '', item.desc ? item.title + ' — ' + item.desc.substring(0, 120) : item.title, item.link || 'https://edicolagiuridica.it')}
+          <button onClick={() => share(item.title || '', item.desc ? item.title + ' — ' + item.desc.substring(0, 120) : item.title, item.link || 'https://edicolaecclesiastica.it')}
             title="Condividi" style={{
               background:'transparent', border:'1px solid var(--eg-border)', borderRadius:4,
               color:'var(--eg-text-muted)', cursor:'pointer', padding:'4px 8px',
@@ -1296,7 +1296,7 @@ function ArticleReaderPanel({ item, onClose, onOpenArticolo }) {
               {item.title}
             </div>
           </div>
-          <button onClick={() => shareArticle(item.title || '', item.desc ? item.title + ' — ' + item.desc.substring(0, 120) : item.title, item.link || 'https://edicolagiuridica.it')}
+          <button onClick={() => shareArticle(item.title || '', item.desc ? item.title + ' — ' + item.desc.substring(0, 120) : item.title, item.link || 'https://edicolaecclesiastica.it')}
             title="Condividi" style={{
               background:'transparent', border:'1px solid var(--eg-border)', borderRadius:6,
               color:'var(--eg-text-muted)', cursor:'pointer', padding:'5px 9px',
@@ -3460,7 +3460,7 @@ function PannelloSentenza({ id, onClose, pdfUrl, query }) {
 
   const doShare = () => {
     const meta = [s.sezione, s.materia].filter(Boolean).join(' · ');
-    shareSentenza(titoloSentenza, `${titoloSentenza}${meta ? ' — ' + meta : ''} — via Edicola Ecclesiastica`, 'https://edicolagiuridica.it');
+    shareSentenza(titoloSentenza, `${titoloSentenza}${meta ? ' — ' + meta : ''} — via Edicola Ecclesiastica`, 'https://edicolaecclesiastica.it');
   };
 
   return (

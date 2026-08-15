@@ -140,7 +140,7 @@ function httpsPost(hostname, path, body, timeoutMs = 60000) {
         'Accept':         'application/sparql-results+json',
         'Content-Type':   'application/x-www-form-urlencoded',
         'Content-Length': bodyBuf.length,
-        'User-Agent':     'EdicolaGiuridica/2.0 (+https://edicola-giuridica.it)',
+        'User-Agent':     'EdicolaEcclesiastica/1.0 (+https://edicolaecclesiastica.it)',
       },
     };
 
@@ -290,7 +290,7 @@ async function main() {
   const anni = rangeAnni(opts.anni.min, opts.anni.max);
 
   console.log('═══════════════════════════════════════════════════════════════');
-  console.log('  SCRAPER EUR-LEX — Edicola Giuridica (services/scraper-eurlex)');
+  console.log('  SCRAPER EUR-LEX — Edicola Ecclesiastica (services/scraper-eurlex)');
   console.log('═══════════════════════════════════════════════════════════════');
   console.log(`  API:      SPARQL CELLAR — publications.europa.eu`);
   console.log(`  Target:   giuridica.db → tabella eurlex`);

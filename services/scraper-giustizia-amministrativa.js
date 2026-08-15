@@ -98,7 +98,7 @@ function fetchUrl(options, body, cookies) {
       host:    options.host   || BASE_HOST,
       path:    options.path,
       headers: {
-        'User-Agent':   'Mozilla/5.0 (compatible; EdicolaGiuridica/1.0; research)',
+        'User-Agent':   'Mozilla/5.0 (compatible; EdicolaEcclesiastica/1.0; research)',
         'Accept':       'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
         'Accept-Language': 'it-IT,it;q=0.9',
         ...(cookieStr ? { 'Cookie': cookieStr } : {}),

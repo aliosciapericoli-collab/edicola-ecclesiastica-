@@ -2,10 +2,14 @@ module.exports = {
   apps: [{
     name: 'edicola-ecclesiastica',
     script: 'server.js',
-    cwd: '/home/work/edicola-giuridica/ecclesiastica',
+    // Deploy standalone: repo clonato in /home/work/edicola-ecclesiastica
+    cwd: '/home/work/edicola-ecclesiastica',
     env: {
       NODE_ENV: 'production',
-      PORT: 3202
+      PORT: 3202,
+      // Percorsi dei DB del progetto madre (per filtro giurisprudenza e schema notizie)
+      ECCL_CASSAZIONE_SRC: '/home/work/edicola-giuridica/data/cassazione-corpus.db',
+      ECCL_GIURIDICA_SRC: '/home/work/edicola-giuridica/data/giuridica.db'
     },
     max_memory_restart: '2G',
     min_uptime: 60000,

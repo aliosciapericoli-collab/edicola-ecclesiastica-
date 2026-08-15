@@ -2,11 +2,11 @@
 # cron-daily.sh — Blocco giornaliero del corpus ecclesiastico (max 10.000 unità).
 #
 # Installazione sul server (crontab -e, utente work):
-#   30 2 * * * /home/work/edicola-giuridica/ecclesiastica/corpus/cron-daily.sh
+#   30 2 * * * /home/work/edicola-ecclesiastica/corpus/cron-daily.sh
 #
 # Il tetto si cambia con ECCL_MAX_UNITA (default 10000).
 
-cd /home/work/edicola-giuridica/ecclesiastica || exit 1
+cd /home/work/edicola-ecclesiastica || exit 1
 LOG=corpus/run-daily.log
 
 {

@@ -1,6 +1,6 @@
 /**
  * scalata-engine.js — Motore completo della Scalata della Conoscenza
- * Edicola Mondo · Node.js
+ * Edicola Ecclesiastica · Node.js
  */
 
 'use strict';

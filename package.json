@@ -1,7 +1,7 @@
 {
   "name": "edicola-ecclesiastica",
   "version": "1.0.0",
-  "description": "Edicola Ecclesiastica — Diritto canonico, vaticano ed ecclesiastico. Clone tematico di Edicola Giuridica.",
+  "description": "Edicola Ecclesiastica — La testata del diritto canonico, vaticano ed ecclesiastico",
   "main": "server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",

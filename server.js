@@ -337,7 +337,7 @@ const fs = require('fs');
 
 // Carica variabili d'ambiente da .env
 try {
-  const env = fs.readFileSync('/home/work/edicola-giuridica/ecclesiastica/.env', 'utf8');
+  const env = fs.readFileSync(__dirname + '/.env', 'utf8');
   env.split('\n').forEach(line => {
     const m = line.match(/^([^=]+)=(.*)$/);
     if (m) process.env[m[1].trim()] = m[2].trim();
@@ -424,7 +424,7 @@ try {
 // Carica source profiles
 let sourceProfiles = {};
 try {
-  sourceProfiles = JSON.parse(fs.readFileSync('/home/work/edicola-giuridica/ecclesiastica/source_profiles.json', 'utf8')).sources || {};
+  sourceProfiles = JSON.parse(fs.readFileSync(__dirname + '/source_profiles.json', 'utf8')).sources || {};
 } catch(e) {}
 
 function getSourceProfile(sourceName) {
@@ -3563,12 +3563,12 @@ http.createServer((req, res) => {
     } catch(e) { res.writeHead(404); res.end('Not found'); }
     return;
   } else if (url === '/privacy' || url === '/privacy.html') {
-    try { const html = fs.readFileSync('/home/work/edicola-giuridica/ecclesiastica/privacy.html','utf8');
+    try { const html = fs.readFileSync(__dirname + '/privacy.html','utf8');
       res.writeHead(200,{'Content-Type':'text/html; charset=utf-8'}); res.end(html);
     } catch(e){ res.writeHead(404); res.end('Not found'); }
   } else if (url === '/manifesto' || url === '/manifesto.html') {
     try {
-      const html = fs.readFileSync('/home/work/edicola-giuridica/ecclesiastica/manifesto.html', 'utf8');
+      const html = fs.readFileSync(__dirname + '/manifesto.html', 'utf8');
       res.setHeader('Content-Type', 'text/html; charset=utf-8');
       res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
       res.end(html);
@@ -3615,11 +3615,11 @@ http.createServer((req, res) => {
       + '<meta charset="UTF-8">\n'
       + '<title>Edicola Ecclesiastica \u2014 Notizie Scalabili senza algoritmi</title>\n'
       + '<meta name="description" content="Per ogni notizia, 6 livelli di comprensione: dal fatto alle implicazioni. 650+ fonti RSS, aggiornamento ogni 5 minuti. Nessun algoritmo decide cosa leggi.">\n'
-      + '<link rel="canonical" href="https://edicolamondo.com/">\n'
+      + '<link rel="canonical" href="https://edicolaecclesiastica.it/">\n'
       + '<meta property="og:title" content="Edicola Ecclesiastica \u2014 Notizie Scalabili">\n'
       + '<meta property="og:description" content="Non ti diciamo cosa pensare. Ti diamo 6 livelli per capire. 650+ fonti, zero algoritmi.">\n'
-      + '<meta property="og:image" content="https://edicolamondo.com/og-image.png">\n'
-      + '<script type="application/ld+json">{"@context":"https://schema.org","@type":"NewsMediaOrganization","name":"Edicola Ecclesiastica","url":"https://edicolamondo.com/","publishingPrinciples":"https://edicolamondo.com/manifesto"}</script>\n'
+      + '<meta property="og:image" content="https://edicolaecclesiastica.it/og-image.png">\n'
+      + '<script type="application/ld+json">{"@context":"https://schema.org","@type":"NewsMediaOrganization","name":"Edicola Ecclesiastica","url":"https://edicolaecclesiastica.it/","publishingPrinciples":"https://edicolaecclesiastica.it/manifesto"}</script>\n'
       + '</head>\n<body>\n'
       + '<header><h1>Edicola Ecclesiastica \u2014 Notizie Scalabili</h1>'
       + '<p>Il primo aggregatore con 6 livelli di comprensione per ogni notizia. <a href="/manifesto">Il Manifesto</a></p></header>\n'
@@ -3648,12 +3648,12 @@ http.createServer((req, res) => {
   } else if (url === '/sw.js') {
     res.setHeader('Content-Type', 'application/javascript');
     res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-    try { res.end(fs.readFileSync('/home/work/edicola-giuridica/ecclesiastica/sw.js','utf8')); } catch(e) { res.end(''); }
+    try { res.end(fs.readFileSync(__dirname + '/sw.js','utf8')); } catch(e) { res.end(''); }
   } else if (url === '/manifest.json') {
     res.setHeader('Content-Type', 'application/json');
-    try { res.end(fs.readFileSync('/home/work/edicola-giuridica/ecclesiastica/app/manifest.json','utf8')); } catch(e) { res.end('{}'); }
+    try { res.end(fs.readFileSync(__dirname + '/app/manifest.json','utf8')); } catch(e) { res.end('{}'); }
   } else if (url.startsWith('/icons/')) {
-    var iconPath = '/home/work/edicola-giuridica/ecclesiastica/app' + url;
+    var iconPath = __dirname + '/app' + url;
     res.setHeader('Content-Type', 'image/png');
     res.setHeader('Cache-Control', 'public, max-age=86400');
     try { res.end(fs.readFileSync(iconPath)); } catch(e) { res.writeHead(404); res.end(''); }
@@ -3663,7 +3663,7 @@ http.createServer((req, res) => {
     const mime = {png:'image/png',jpg:'image/jpeg',txt:'text/plain',xml:'application/xml'}[ext]||'application/octet-stream';
     res.setHeader('Content-Type', mime);
     res.setHeader('Cache-Control', 'public, max-age=3600');
-    try { res.end(fs.readFileSync('/home/work/edicola-giuridica/ecclesiastica/'+fname)); } catch(e) { res.writeHead(404); res.end(''); }
+    try { res.end(fs.readFileSync(__dirname + '/'+fname)); } catch(e) { res.writeHead(404); res.end(''); }
   } else {
     res.writeHead(404); res.end('Not found');
   }

@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://edicolagiuridica.it/schemas/cluster-v1.json",
+  "$id": "https://edicolaecclesiastica.it/schemas/cluster-v1.json",
   "title": "Cluster v1.0",
   "description": "Cluster tematico di casi penali simili con statistiche aggregate di esiti e strategie ricorrenti.",
   "type": "object",
