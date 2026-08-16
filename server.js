@@ -941,6 +941,36 @@ async function translateBatchClaude(items, fromLang) {
   } catch (_) { return null; }
 }
 
+// Traduzione INTEGRALE di blocchi di testo lunghi (tasto "Traduci articolo").
+// Distinta da translateBatchClaude, che è tarata sui titoli e TRONCA a 300
+// caratteri: qui i blocchi passano interi e il prompt vieta di riassumere.
+async function translateFullClaude(blocchi, fromLang) {
+  if (!blocchi.length) return null;
+  if (!canCallClaude('translate')) return null;
+  const _chars = blocchi.reduce((n, b) => n + b.length, 0);
+  const payload = {
+    model: 'claude-haiku-4-5',
+    max_tokens: Math.min(8000, Math.ceil(_chars * 0.9) + 500),
+    temperature: 0,
+    messages: [{ role: 'user', content:
+      'Traduci INTEGRALMENTE in italiano giornalistico i seguenti blocchi di testo (lingua di origine: ' + fromLang + '). ' +
+      'Non riassumere, non omettere frasi, non accorciare: ogni blocco tradotto deve coprire tutto il contenuto del blocco originale. ' +
+      'Rispondi SOLO con un array JSON di stringhe, stesso ordine e stesso numero di elementi, senza commenti.\n' +
+      JSON.stringify(blocchi)
+    }]
+  };
+  try {
+    const resp = await _callClaude(payload, 45000);
+    if (resp.status !== 200) return null;
+    const body = JSON.parse(resp.body);
+    const txt = ((body.content || [])[0] || {}).text || '';
+    const m = txt.match(/\[[\s\S]*\]/);
+    if (!m) return null;
+    const arr = JSON.parse(m[0]);
+    return Array.isArray(arr) && arr.length === blocchi.length ? arr.map(String) : null;
+  } catch (_) { return null; }
+}
+
 // Cache persistente delle traduzioni (per URL) — evita di ritradurre lo stesso
 // articolo a ogni refresh dei feed (ogni 5 min). Salvata su disco
 // (data/traduzioni.json) così sopravvive ai riavvii: senza, ogni pm2 restart
@@ -2665,7 +2695,20 @@ http.createServer((req, res) => {
         const { text, lang } = JSON.parse(body);
         if (!text || !lang || lang === 'it') return res.end(JSON.stringify({ translated: text || '' }));
         const testo = String(text).substring(0, 12000);
-        const paragrafi = testo.split(/\n{2,}/);
+        // Blocchi da ~1800 caratteri sui confini di paragrafo; i paragrafi
+        // monstre (o il testo senza a-capo) vengono spezzati sulle frasi.
+        const paragrafi = [];
+        for (const p of testo.split(/\n{2,}/)) {
+          if (p.length <= 1800) { paragrafi.push(p); continue; }
+          let resto = p;
+          while (resto.length > 1800) {
+            let cut = resto.lastIndexOf('. ', 1800);
+            if (cut < 600) cut = 1800;
+            paragrafi.push(resto.slice(0, cut + 1));
+            resto = resto.slice(cut + 1).trim();
+          }
+          if (resto) paragrafi.push(resto);
+        }
         const blocchi = [];
         let cur = '';
         for (const p of paragrafi) {
@@ -2675,10 +2718,10 @@ http.createServer((req, res) => {
         if (cur) blocchi.push(cur);
         const fuori = [];
         for (let i = 0; i < blocchi.length; i += 4) {
-          const batch = blocchi.slice(i, i + 4).map(b => ({ t: b, d: '' }));
-          const out = await translateBatchClaude(batch, lang);
-          if (!out) { fuori.push(...blocchi.slice(i, i + 4)); continue; }
-          fuori.push(...out.map((o, j) => (o && o.t) ? o.t : blocchi[i + j]));
+          const batch = blocchi.slice(i, i + 4);
+          const out = await translateFullClaude(batch, lang);
+          if (!out) { fuori.push(...batch); continue; }
+          fuori.push(...out.map((o, j) => o || batch[j]));
         }
         res.end(JSON.stringify({ translated: fuori.join('\n\n') }));
       } catch(e) {

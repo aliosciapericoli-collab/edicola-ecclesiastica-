@@ -1379,7 +1379,13 @@ function ArticleReaderPanel({ item, onClose, onOpenArticolo }) {
                 <button disabled={tradFullLoading} onClick={async () => {
                   setTradFullLoading(true);
                   try {
-                    const plain = (manualContent || articleText || '').replace(/<[^>]+>/g, ' ').replace(/[ \t]+/g, ' ').trim();
+                    const plain = (manualContent || articleText || '')
+                      .replace(/<\/(p|div|h[1-6]|li|blockquote)>/gi, '\n\n')
+                      .replace(/<br[^>]*>/gi, '\n')
+                      .replace(/<[^>]+>/g, ' ')
+                      .replace(/[ \t]+/g, ' ')
+                      .replace(/\n{3,}/g, '\n\n')
+                      .trim();
                     const r = await fetch(API + '/api/translate-full', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ text: plain, lang: item.lang }) });
                     const d = await r.json();
                     if (d.translated) setTradFull(d.translated);
