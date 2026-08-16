@@ -4608,7 +4608,7 @@ function PageNorme() {
       </div>
 
       {soloRamo && (
-        <button onClick={() => { window.__pendingRamo = null; setSoloRamo(null); }} style={{ background:'transparent', border:'1px solid var(--eg-border)', borderRadius:6, padding:'5px 12px', color:'var(--eg-text-muted)', cursor:'pointer', fontSize:12.5, margin:'14px 0 0' }}>← Tutti i rami del corpus</button>
+        <button onClick={() => { window.__pendingRamo = null; setSoloRamo(null); document.dispatchEvent(new CustomEvent('eg:ramoChange', { detail: null })); }} style={{ background:'transparent', border:'1px solid var(--eg-border)', borderRadius:6, padding:'5px 12px', color:'var(--eg-text-muted)', cursor:'pointer', fontSize:12.5, margin:'14px 0 0' }}>← Tutti i rami del corpus</button>
       )}
       {soloRamo && !(rami[soloRamo] && rami[soloRamo].atti && rami[soloRamo].atti.length) && (
         <div style={{ marginTop:18, padding:'16px 18px', background:'var(--eg-surface)', border:'1px solid var(--eg-border)', borderRadius:10, fontSize:13, color:'var(--eg-text-muted)', lineHeight:1.6 }}>
@@ -8690,9 +8690,9 @@ export default function EdicolaGiuridica() {
         {/* Bottom nav — visibile solo su mobile via CSS */}
         <nav className="eg-mobile-nav" style={{ position:"fixed", bottom:0, left:0, right:0, background:"var(--eg-surface)", borderTop:"1px solid var(--eg-border)", justifyContent:"space-around", padding:"6px 0 8px", zIndex:100 }}>
           {NAV_ITEMS.map(item => {
-            const active = item.id !== 'guida' && activeTab === item.id;
+            const active = item.id !== 'guida' && activeTab === item.id && (item.id !== 'norme' || activeRamo === (item.ramo || null));
             return (
-              <button key={item.id} onClick={() => onNav(item.id)} style={{ flex:1, minWidth:0, display:"flex", flexDirection:"column", alignItems:"center", gap:2, padding:"6px 2px", background:"transparent", border:"none", cursor:"pointer" }}>
+              <button key={item.id + (item.ramo || '')} onClick={() => onNav(item.id, item.ramo)} style={{ flex:1, minWidth:0, display:"flex", flexDirection:"column", alignItems:"center", gap:2, padding:"6px 2px", background:"transparent", border:"none", cursor:"pointer" }}>
                 <span style={{ display:"flex", color: active ? "var(--eg-accent)" : "var(--eg-text-dim)" }}>{TAB_SVGS[item.id]}</span>
                 <span style={{ fontSize:9.5, fontWeight:active?700:500, color:active?"var(--eg-accent)":"var(--eg-text-dim)", whiteSpace:"nowrap", letterSpacing:"-0.01em" }}>{item.short || item.label}</span>
                 {active && <div style={{ width:18, height:2, borderRadius:1, background:"var(--eg-accent)" }}/>}

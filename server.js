@@ -535,47 +535,72 @@ function generateWeeklyHTML(trending, sentenze, contrasti, totNotizie) {
 
 // ── Classificazione articoli per area giuridica ────────────
 function classifyArticle(article) {
-  // Classificatore ecclesiastico: aree = santa_sede, diritto_canonico,
+  // Classificatore ecclesiastico v2: aree = santa_sede, diritto_canonico,
   // stato_chiese, chiesa_italia, confessioni_acattoliche, liberta_religiosa,
-  // religioni_mondo. La categoria del feed è già una di queste; le parole
-  // chiave del titolo fanno override per i feed generalisti (Google News).
+  // religioni_mondo. Prima il CONTENUTO (titolo+descrizione, che dopo la
+  // traduzione è in italiano; le chiavi inglesi coprono il pre-traduzione),
+  // in ordine di specificità; la categoria del feed è solo il ripiego finale.
   const cat = (article.category || '').toLowerCase();
-  const t = ((article.title || '') + ' ' + (article.desc || article.description || '')).toLowerCase();
+  // Punteggiatura → spazi, così ' papa ' aggancia anche "Papa:" o "(Papa)";
+  // spazi ai bordi per le chiavi con confini di parola (' cei ').
+  const t = (' ' + ((article.title || '') + ' ' + (article.desc || article.description || '')).toLowerCase()
+    .replace(/[^a-z0-9àèéìòùáéíóúüö]/g, ' ') + ' ').replace(/\s+/g, ' ');
+  const ha = (...parole) => parole.some(p => t.includes(p));
 
-  // OVERRIDE dal contenuto: temi giuridici specifici battono la categoria feed
-  if (t.includes('diritto canonico') || t.includes('rota romana') || t.includes('tribunale ecclesiastico') ||
-      t.includes('nullità matrimonial') || t.includes('matrimonio canonico') || t.includes('canon law') ||
-      t.includes('segnatura apostolica') || t.includes('motu proprio') || t.includes('codice di diritto canonico'))
+  if (ha('diritto canonico', 'rota romana', 'tribunale ecclesiastico', 'nullità matrimonial', 'matrimonio canonico',
+         'segnatura apostolica', 'motu proprio', 'codice di diritto canonico', 'processo canonico', 'delitti riservati', 'scomunica',
+         'canon law', 'canonical', 'canonist', 'annulment'))
     return 'diritto_canonico';
-  if (t.includes('8 per mille') || t.includes('otto per mille') || t.includes('concordato') ||
-      t.includes('intesa') && (t.includes('confession') || t.includes('religios')) ||
-      t.includes('ente ecclesiastico') || t.includes('enti ecclesiastici') || t.includes('matrimonio concordatario') ||
-      t.includes('ora di religione') || t.includes('edifici di culto') || t.includes('ministro di culto') ||
-      t.includes('imu') && t.includes('chies'))
+  if (ha('8 per mille', 'otto per mille', 'concordato', 'patti lateranensi', 'ente ecclesiastico', 'enti ecclesiastici',
+         'matrimonio concordatario', 'ora di religione', 'edifici di culto', 'ministro di culto', 'insegnamento della religione') ||
+      (ha('intesa', 'intese') && ha('confession', 'religios', 'culto')) ||
+      (ha(' imu ', 'esenzion') && ha('chies', 'ecclesiast')))
     return 'stato_chiese';
-  if (t.includes('libertà religiosa') || t.includes('libertà di culto') || t.includes('religious freedom') ||
-      t.includes('religious liberty') || t.includes('persecuzion') && t.includes('cristian') ||
-      t.includes('blasfemia') || t.includes('blasphemy') || t.includes('laicità') || t.includes('crocifisso'))
+  if (ha('libertà religiosa', 'libertà di culto', 'persecuzion', 'blasfemia', 'laicità', 'crocifisso', 'apostasia', 'cristiani perseguitati',
+         'religious freedom', 'religious liberty', 'blasphemy', 'persecution', 'church attack', 'anti-conversion'))
     return 'liberta_religiosa';
-  if (t.includes('islam') || t.includes('moschea') || t.includes('imam') || t.includes('ucoii') ||
-      t.includes('ebraismo') || t.includes('sinagoga') || t.includes('comunità ebraica') || t.includes('rabbino') ||
-      t.includes('valdes') || t.includes('battist') && t.includes('chies') || t.includes('luteran') ||
-      t.includes('ortodoss') || t.includes('buddhis') || t.includes('induis') || t.includes('soka gakkai') ||
-      t.includes('avventist') || t.includes('pentecostal') || t.includes('testimoni di geova'))
+  if (ha('islam', 'moschea', 'imam', 'ucoii', 'corano', 'ramadan', 'ebraismo', 'ebraica', 'ebraiche', 'sinagoga', 'rabbino', 'shoah', 'kasher', 'shofar',
+         'valdes', 'metodist', 'luteran', 'ortodoss', 'patriarcato', 'buddhis', 'buddis', 'induis', 'sikh', 'soka gakkai',
+         'avventist', 'pentecostal', 'evangelic', 'protestant', 'testimoni di geova', 'antisemitismo', 'islamofobia',
+         'mosque', 'synagogue', 'jewish', 'muslim', 'orthodox church', 'hindu', 'buddhist', 'antisemitism') ||
+      (ha('battist') && ha('chies', 'church', 'union')))
     return 'confessioni_acattoliche';
-  if (t.includes('papa ') || t.startsWith('papa') || t.includes('pontefice') || t.includes('santa sede') ||
-      t.includes('vaticano') || t.includes('curia romana') || t.includes('conclave') || t.includes('nunzio') ||
-      t.includes('angelus') || t.includes('udienza generale') || t.includes('concistoro') || t.includes('dicastero'))
+  if (ha(' papa ', 'pontefice', 'santa sede', 'vaticano', 'vatican', 'curia romana', 'conclave', 'nunzio', 'nunziatura',
+         'angelus', 'udienza generale', 'concistoro', 'dicastero', 'enciclica', 'esortazione apostolica',
+         'pope ', 'pontiff', 'holy see', 'cardinal') || t.startsWith(' papa '))
     return 'santa_sede';
-  if (t.includes('cei') || t.includes('conferenza episcopale') || t.includes('diocesi') ||
-      t.includes('vescov') || t.includes('parrocchi') || t.includes('oratorio'))
+  if (ha(' cei ', 'conferenza episcopale italiana', 'diocesi di', 'arcidiocesi', 'parrocchi', 'oratorio', 'caritas',
+         'azione cattolica', 'otto x mille') ||
+      (ha('vescov', 'diocesi', 'dioces') && ha('itali', 'milano', 'roma', 'napoli', 'torino', 'bologna', 'firenze', 'palermo', 'venezia')))
     return 'chiesa_italia';
+  if (ha('vescov', 'diocesi', 'diocese', 'bishop', 'archbishop', 'cattedrale', 'cathedral', 'missionari', 'missionary',
+         'pellegrinaggi', 'pilgrimage', 'santuario', 'beatificazion', 'canonizzazion', 'liturgi', 'catechis',
+         'chiesa cattolica', 'catholic church', 'clergy', 'clero '))
+    return 'religioni_mondo';
 
-  // Categoria del feed (già ecclesiastica)
+  // Categoria del feed (già ecclesiastica) come ripiego
   if (['santa_sede','diritto_canonico','stato_chiese','chiesa_italia',
        'confessioni_acattoliche','liberta_religiosa','religioni_mondo'].includes(cat)) return cat;
 
   return 'religioni_mondo';
+}
+
+// Fuori tema: scarta i pezzi chiaramente estranei alla materia ecclesiastica
+// che le fonti specializzate a volte infilano nei loro feed (recensioni
+// musicali, sanità generica, sport, mercati). Un articolo si salva se
+// contiene almeno un termine religioso.
+function isFuoriTema(article) {
+  const t = (' ' + ((article.title || '') + ' ' + (article.desc || article.description || '')).toLowerCase()
+    .replace(/[^a-z0-9àèéìòùáéíóúüö]/g, ' ') + ' ').replace(/\s+/g, ' ');
+  const OFFTOPIC = ['influenza aviaria', 'stipendi', 'infermier', ' hiv ', "l'hiv", 'tubercolosi', 'vaccino contro',
+    'calciomercato', 'serie a', 'campionato', 'festival di sanremo', 'recensione', 'classifica musicale',
+    ' album ', 'canzone', 'canzoni', 'discografi', 'cantautor', 'rockstar', 'tournée',
+    'borsa di milano', 'wall street', 'inflazione', 'tassi di interesse', 'oroscopo', 'meteo ', 'ricetta '];
+  if (!OFFTOPIC.some(p => t.includes(p))) return false;
+  const RELIGIOSO = ['chiesa', 'chies', 'papa', 'vescov', 'dioces', 'parrocchi', 'religio', 'cattolic', 'cristian',
+    'fede ', 'vangelo', 'islam', 'ebraic', 'ebraismo', 'moschea', 'sinagoga', 'rabbino', 'liturg', 'preghiera',
+    'vatican', 'clero', 'monaster', 'suor', 'frate ', 'teolog', 'bibbia', 'pastorale', 'caritas', 'missionar', 'culto'];
+  return !RELIGIOSO.some(p => t.includes(p));
 }
 
 
@@ -1228,6 +1253,31 @@ async function refreshFeeds() {
     return true;
   });
 
+  // Dedup per URL PRIMA di quella per titolo: lo stesso articolo può esserci
+  // due volte con titoli diversi (fresco in lingua originale + versione in
+  // cache già tradotta) e la dedup per titolo non li aggancia. A parità di
+  // link vince la copia già tradotta (risparmia anche traduzioni).
+  {
+    const byLink = new Map();
+    const dropLink = new Set();
+    all.forEach((a, idx) => {
+      const link = (a.link || '').trim();
+      if (!link) return;
+      if (byLink.has(link)) {
+        const prevIdx = byLink.get(link);
+        if (!all[prevIdx].translated && a.translated) {
+          dropLink.add(prevIdx);
+          byLink.set(link, idx);
+        } else {
+          dropLink.add(idx);
+        }
+      } else {
+        byLink.set(link, idx);
+      }
+    });
+    if (dropLink.size) all = all.filter((_, idx) => !dropLink.has(idx));
+  }
+
   // Dedup aggressiva: normalizza titolo (minuscolo, no punteggiatura, no spazi)
   // Confronta primi 60 chars — cattura duplicati anche con piccole variazioni
   // Per feed Google News: preferisci l'URL diretto rispetto al redirect GN
@@ -1313,6 +1363,25 @@ async function refreshFeeds() {
   }
 
   all = [...italiani, ...translated];
+  // Riclassificazione a valle della traduzione: il titolo tradotto in italiano
+  // permette alle parole chiave di lavorare anche sugli articoli esteri,
+  // invece di fidarsi alla cieca della categoria del feed.
+  all.forEach(a => { a.area_diritto = classifyArticle(a); });
+  // Fuori tema: le fonti specializzate a volte pubblicano pezzi che con la
+  // materia ecclesiastica non c'entrano nulla (musica, salute, sport, borsa).
+  all = all.filter(a => !isFuoriTema(a));
+  // Seconda dedup per titolo, ORA che i titoli sono tutti in italiano
+  // (prende la stessa notizia arrivata con link diversi, es. GNews vs diretto).
+  {
+    const seenT = new Set();
+    all = all.filter(a => {
+      const norm = (a.title || '').toLowerCase().replace(/[^a-z0-9àèéìòùáéíóú]/g, '').substring(0, 60);
+      if (!norm) return false;
+      if (seenT.has(norm)) return false;
+      seenT.add(norm);
+      return true;
+    });
+  }
   all.sort((a,b) => new Date(b.date) - new Date(a.date));
 
   // Filtra notizie troppo vecchie dalla homepage (max 96h)
