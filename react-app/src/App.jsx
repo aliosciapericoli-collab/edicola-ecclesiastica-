@@ -69,7 +69,7 @@ const AREA_COLORS = {
   "diritto_canonico": "#A63A50",
   "stato_chiese": "#7B68A6",
   "chiesa_italia": "#5CA065",
-  "confessioni_acattoliche": "#5B9BD5",
+  "confessioni_acattoliche": "#C4835C",
   "liberta_religiosa": "#5CBAC4",
   "religioni_mondo": "#C4835C",
   "penale": "#C45C5C",
@@ -104,9 +104,9 @@ const CATEGORY_LABELS = {
   "diritto_canonico": "Dir. Canonico",
   "stato_chiese": "Stato e Chiese",
   "chiesa_italia": "Chiesa Italia",
-  "confessioni_acattoliche": "Confessioni",
+  "confessioni_acattoliche": "Religioni",
   "liberta_religiosa": "Libertà religiosa",
-  "religioni_mondo": "Religioni Mondo",
+  "religioni_mondo": "Religioni",
   "penale": "Penale", "diritto_penale": "Penale", "gn_penale": "Penale",
   "civile": "Civile", "diritto_civile": "Civile", "gn_diritto": "Civile",
   "lavoro": "Lavoro", "diritto_lavoro": "Lavoro", "gn_lavoro": "Lavoro",
@@ -1386,9 +1386,18 @@ function ArticleReaderPanel({ item, onClose, onOpenArticolo }) {
                       .replace(/[ \t]+/g, ' ')
                       .replace(/\n{3,}/g, '\n\n')
                       .trim();
-                    const r = await fetch(API + '/api/translate-full', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ text: plain, lang: item.lang }) });
-                    const d = await r.json();
-                    if (d.translated) setTradFull(d.translated);
+                    // Due richieste in parallelo: la PRIMA porzione (veloce,
+                    // ~4s) compare subito; il testo completo la sostituisce
+                    // appena pronto. Così il lettore non fissa uno spinner.
+                    const primo = plain.slice(0, 1600);
+                    const chiama = (t) => fetch(API + '/api/translate-full', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ text: t, lang: item.lang }) }).then(r => r.json()).catch(() => null);
+                    const pTutto = chiama(plain);
+                    if (plain.length > 1700) {
+                      const d1 = await chiama(primo);
+                      if (d1 && d1.translated) { setTradFull(d1.translated + '\n\n⏳ Traduzione del resto in corso…'); setTradFullLoading(false); }
+                    }
+                    const d = await pTutto;
+                    if (d && d.translated) setTradFull(d.translated);
                   } catch(_) {}
                   setTradFullLoading(false);
                 }} style={{ fontSize:12, fontWeight:700, padding:'6px 14px', borderRadius:6, border:'1px solid var(--eg-porpora)', background:'var(--eg-porpora)15', color:'var(--eg-porpora)', cursor:'pointer' }}>
@@ -1964,7 +1973,7 @@ function PageNotizie({ onOpenArticolo, onNavigate }) {
   // Filtri per area: ordine canonico fisso (non per frequenza, così i chip non
   // saltellano a ogni refresh) + conteggio articoli. Eventuali aree fuori
   // elenco si accodano per frequenza.
-  const AREE_ORDINE = ['santa_sede','chiesa_italia','diritto_canonico','stato_chiese','confessioni_acattoliche','liberta_religiosa','religioni_mondo'];
+  const AREE_ORDINE = ['santa_sede','chiesa_italia','diritto_canonico','stato_chiese','liberta_religiosa','religioni_mondo'];
   const aree = (() => {
     const freq = {};
     (notizie || []).forEach(n => { const k = n.area_diritto || n.category; if (k) freq[k] = (freq[k] || 0) + 1; });
@@ -8027,9 +8036,8 @@ function RightPanel() {
           { area:"Diritto canonico", color:"#C46A7C", fonti:3 },
           { area:"Stato e Chiese", color:"#5C8AC4", fonti:4 },
           { area:"Chiesa in Italia", color:"#5CA065", fonti:7 },
-          { area:"Confessioni acattoliche", color:"#9B7EC4", fonti:4 },
           { area:"Libertà religiosa", color:"#D4A053", fonti:3 },
-          { area:"Religioni nel mondo", color:"#5CBAC4", fonti:4 },
+          { area:"Religioni", color:"#5CBAC4", fonti:8 },
         ].map((a,i) => (
           <div key={i} style={{ display:"flex", alignItems:"center", gap:8, marginBottom:7 }}>
             <div style={{ width:10, height:10, borderRadius:3, background:a.color, flexShrink:0 }}/>
