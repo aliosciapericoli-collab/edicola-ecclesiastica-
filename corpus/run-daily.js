@@ -74,7 +74,9 @@ async function main() {
     ["ecclesiastico_it", () => require("./import-ecclesiastico").run({ db, budget })],
     ["vaticano", () => require("./import-vaticano").run({ db, budget })],
     ["magistero", () => require("./import-magistero").run({ db, budget })],
-    ["giurisprudenza", () => Promise.resolve(require("./filtra-giurisprudenza").run({ budget }))],
+    // Fase 'giurisprudenza' rimossa dal giro quotidiano: la Cassazione non fa
+    // parte di Edicola Ecclesiastica (scelta editoriale) e la sezione è stata
+    // tolta dal sito. filtra-giurisprudenza.js resta invocabile con --solo.
   ];
 
   for (const [nome, fn] of FASI) {
