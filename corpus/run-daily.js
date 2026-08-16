@@ -73,6 +73,7 @@ async function main() {
     }],
     ["ecclesiastico_it", () => require("./import-ecclesiastico").run({ db, budget })],
     ["vaticano", () => require("./import-vaticano").run({ db, budget })],
+    ["codici_scv", () => require("./import-codici-scv").run({ db, budget })],
     ["magistero", () => require("./import-magistero").run({ db, budget })],
     // Fase 'giurisprudenza' rimossa dal giro quotidiano: la Cassazione non fa
     // parte di Edicola Ecclesiastica (scelta editoriale) e la sezione è stata
