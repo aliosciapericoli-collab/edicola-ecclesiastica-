@@ -4461,7 +4461,10 @@ function PageNorme() {
     </div>
   );
 
-  const SearchInput = () => (
+  // JSX semplice, NON un componente: definirlo come componente interno lo
+  // ricreava a ogni render, React smontava l'<input> a ogni lettera digitata
+  // e su mobile la tastiera spariva (focus perso).
+  const searchInput = (
     <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'var(--eg-surface-hover)', borderRadius: 8, padding: '9px 14px', marginBottom: 18 }}>
       <span style={{ color: 'var(--eg-text-muted)' }}>🔍</span>
       <input
@@ -4540,7 +4543,7 @@ function PageNorme() {
   if (risultati !== null) {
     return (
       <div style={wrap}>
-        <Header /><SearchInput />
+        <Header />{searchInput}
         <div style={{ fontSize: 12.5, color: 'var(--eg-text-muted)', marginBottom: 10 }}>{risultati.length} risultati per “{q}”</div>
         {risultati.length === 0 && <div style={{ color: 'var(--eg-text-dim)', fontSize: 14 }}>Nessun articolo trovato.</div>}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -4590,7 +4593,7 @@ function PageNorme() {
   );
   return (
     <div style={wrap}>
-      <Header /><Nota /><SearchInput />
+      <Header /><Nota />{searchInput}
       {codici.filter(c => c.num_articoli > 0).length > 0 && <GroupTitle>Codici</GroupTitle>}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(260px,1fr))', gap: 10 }}>
         {codici.filter(c => c.num_articoli > 0).map((c) => (
