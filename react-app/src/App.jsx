@@ -4319,7 +4319,10 @@ function PageNorme() {
         if (d && d.ok) {
           setCodici(d.codici || []);
           setTot({ codici: d.totale_codici || 0, articoli: d.totale_articoli || 0, atti: d.totale_atti || 0 });
-          setStato((d.totale_codici || 0) > 0 ? 'attivo' : 'in_costruzione');
+          // Attivo se c'è QUALSIASI contenuto: codici classici O atti del corpus
+          // (in Edicola Ecclesiastica i "codici" Normattiva sono zero, ma il
+          // corpus canonico/vaticano/magistero vive nella tabella atti).
+          setStato(((d.totale_codici || 0) > 0 || (d.totale_atti || 0) > 0) ? 'attivo' : 'in_costruzione');
         } else { setStato('in_costruzione'); }
       })
       .catch(() => setStato('errore'));
@@ -4341,7 +4344,8 @@ function PageNorme() {
   const openAtto = (a) => {
     const meta = { id: a.urn, urn: a.urn, isAtto: true, url: a.url_fonte,
       nome: a.titolo || `${a.tipo || 'Atto'} ${a.numero || ''}${a.anno ? '/' + a.anno : ''}`.trim(),
-      sigla: a.numero ? `${a.tipo || ''} ${a.numero}/${a.anno || ''}`.trim() : (a.tipo || '') };
+      sigla: a.numero ? `${a.tipo || ''} ${a.numero}/${a.anno || ''}`.trim() : (a.tipo || ''),
+      canoni: a.ordinamento === 'canonico' };
     setSel(meta); setArt(null); setArticoli([]); setArtLoading(true); setRisultati(null); setQ('');
     fetch(API + '/api/norme/atto-articoli?urn=' + encodeURIComponent(a.urn))
       .then(r => r.json())
@@ -4435,10 +4439,10 @@ function PageNorme() {
   const Nota = () => (
     <div style={{ ...card, padding: '10px 14px', marginBottom: 16, fontSize: 12.5, color: 'var(--eg-text-muted)', background: 'rgba(200,169,110,0.10)' }}>
       {tot.atti ? (
-        <>📚 <strong>Archivio Normattiva:</strong> <strong>{tot.atti.toLocaleString('it-IT')}</strong> fra leggi e decreti, testo vigente.
-          {attiInfo.pending ? <> Altri <strong>{attiInfo.pending.toLocaleString('it-IT')}</strong> atti sono in coda e vengono aggiunti ogni notte.</> : <> Nuovi atti dalla Gazzetta Ufficiale ogni giorno.</>}</>
+        <>📜 <strong>Corpus ecclesiastico:</strong> <strong>{tot.atti.toLocaleString('it-IT')}</strong> atti — CIC, CCEO, leggi vaticane, intese Stato-confessioni e magistero — con <strong>{tot.articoli.toLocaleString('it-IT')}</strong> canoni e articoli.
+          {attiInfo.pending ? <> Altri <strong>{attiInfo.pending.toLocaleString('it-IT')}</strong> atti sono in coda: lo scaricamento notturno continua.</> : <> Nuovi testi vengono scaricati ogni notte.</>}</>
       ) : (
-        <>🏗️ <strong>Archivio in costruzione:</strong> le leggi e i decreti da Normattiva e Gazzetta Ufficiale vengono aggiunti ogni notte.</>
+        <>🏗️ <strong>Corpus in costruzione:</strong> codici, leggi vaticane e magistero vengono scaricati ogni notte a blocchi.</>
       )}
     </div>
   );
@@ -4449,11 +4453,11 @@ function PageNorme() {
         <h1 style={{ fontSize: 26, fontWeight: 800, color: 'var(--eg-text)', margin: 0 }}>Norme</h1>
         {stato === 'attivo' && (
           <div style={{ fontSize: 12, color: 'var(--eg-text-muted)' }}>
-            <strong style={{ color: 'var(--eg-accent)' }}>{tot.articoli.toLocaleString('it-IT')}</strong> articoli · {tot.codici} codici{tot.atti ? ` · ${tot.atti} atti` : ''}
+            <strong style={{ color: 'var(--eg-accent)' }}>{tot.articoli.toLocaleString('it-IT')}</strong> canoni e articoli{tot.codici ? ` · ${tot.codici} codici` : ''}{tot.atti ? ` · ${tot.atti.toLocaleString('it-IT')} atti` : ''}
           </div>
         )}
       </div>
-      <div style={{ fontSize: 13.5, color: 'var(--eg-text-muted)', marginTop: 4 }}>Codici e leggi, collegati alle notizie e alla giurisprudenza.</div>
+      <div style={{ fontSize: 13.5, color: 'var(--eg-text-muted)', marginTop: 4 }}>Il corpus canonico ed ecclesiastico: codici, leggi vaticane, intese e magistero.</div>
     </div>
   );
 
@@ -4463,7 +4467,7 @@ function PageNorme() {
       <input
         type="text" value={q}
         onChange={(e) => onQueryChange(e.target.value)}
-        placeholder="Cerca negli articoli dei codici (es. risarcimento, prescrizione, art. 1453)…"
+        placeholder="Cerca nel corpus (es. matrimonio, parrocchia, can. 1055, libertà religiosa)…"
         style={{ flex: 1, background: 'transparent', border: 'none', outline: 'none', color: 'var(--eg-text)', fontSize: 14 }}
       />
       {searching && <span style={{ fontSize: 11, color: 'var(--eg-text-dim)' }}>…</span>}
@@ -4479,9 +4483,9 @@ function PageNorme() {
       <div style={wrap}>
         <Header />
         <div style={{ ...card, padding: '28px 22px', textAlign: 'center' }}>
-          <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--eg-text)', marginBottom: 8 }}>Sezione in costruzione</div>
+          <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--eg-text)', marginBottom: 8 }}>Corpus in costruzione</div>
           <div style={{ fontSize: 13.5, color: 'var(--eg-text-muted)', lineHeight: 1.6 }}>
-            L'archivio delle norme non è al momento disponibile.<br/>Presto tutte le leggi da Normattiva e Gazzetta Ufficiale.
+            Il corpus canonico ed ecclesiastico si sta scaricando.<br/>CIC, CCEO, leggi vaticane, intese e magistero arrivano con i blocchi notturni.
           </div>
         </div>
       </div>
@@ -4497,7 +4501,7 @@ function PageNorme() {
           <div style={{ fontSize: 11.5, color: 'var(--eg-text-dim)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>
             {(art.codice_nome || (sel && sel.nome) || '')}{art.codice_sigla ? ` · ${art.codice_sigla}` : ''}
           </div>
-          <h2 style={{ fontSize: 21, fontWeight: 800, color: 'var(--eg-text)', margin: '0 0 4px' }}>Art. {art.numero}</h2>
+          <h2 style={{ fontSize: 21, fontWeight: 800, color: 'var(--eg-text)', margin: '0 0 4px' }}>{sel && sel.canoni ? 'Can.' : 'Art.'} {art.numero}</h2>
           {art.titolo && <div style={{ fontSize: 15, fontStyle: 'italic', color: 'var(--eg-text-muted)', marginBottom: 14 }}>{art.titolo}</div>}
           <div style={{ fontSize: 15.5, lineHeight: 1.75, color: 'var(--eg-text)', whiteSpace: 'pre-wrap' }}>{art.testo}</div>
 
@@ -4509,7 +4513,7 @@ function PageNorme() {
               </button>
             )}
             {(art.codice_url || (sel && sel.url)) && (
-              <a href={art.codice_url || sel.url} target="_blank" rel="noopener noreferrer" style={{ fontSize: 12.5, color: 'var(--eg-accent)', textDecoration: 'none' }}>Vai al testo ufficiale su Normattiva →</a>
+              <a href={art.codice_url || sel.url} target="_blank" rel="noopener noreferrer" style={{ fontSize: 12.5, color: 'var(--eg-accent)', textDecoration: 'none' }}>Vai al testo ufficiale →</a>
             )}
           </div>
 
@@ -4563,7 +4567,7 @@ function PageNorme() {
       <div style={wrap}>
         <button onClick={() => { setSel(null); setArticoli([]); }} style={{ background: 'transparent', border: '1px solid var(--eg-border)', borderRadius: 6, padding: '5px 12px', color: 'var(--eg-text-muted)', cursor: 'pointer', fontSize: 12.5, marginBottom: 16 }}>← Tutti i codici</button>
         <h2 style={{ fontSize: 22, fontWeight: 800, color: 'var(--eg-text)', margin: '0 0 2px' }}>{sel.nome}</h2>
-        <div style={{ fontSize: 12.5, color: 'var(--eg-text-muted)', marginBottom: 16 }}>{sel.sigla ? sel.sigla + ' · ' : ''}{articoli.length} articoli</div>
+        <div style={{ fontSize: 12.5, color: 'var(--eg-text-muted)', marginBottom: 16 }}>{sel.sigla ? sel.sigla + ' · ' : ''}{articoli.length} {sel.canoni ? 'canoni' : 'articoli'}</div>
         {artLoading && <div style={{ color: 'var(--eg-text-dim)', fontSize: 14 }}>Caricamento…</div>}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(220px,1fr))', gap: 8 }}>
           {articoli.map((a, i) => (
@@ -4571,7 +4575,7 @@ function PageNorme() {
               style={{ ...card, padding: '10px 12px', cursor: 'pointer' }}
               onMouseEnter={e => e.currentTarget.style.background = 'var(--eg-surface-hover)'}
               onMouseLeave={e => e.currentTarget.style.background = 'var(--eg-surface)'}>
-              <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--eg-accent)' }}>Art. {a.numero}</div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--eg-accent)' }}>{sel.canoni ? 'Can.' : 'Art.'} {a.numero}</div>
               {a.titolo && <div style={{ fontSize: 12, color: 'var(--eg-text-muted)', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{a.titolo}</div>}
             </div>
           ))}
@@ -4587,7 +4591,7 @@ function PageNorme() {
   return (
     <div style={wrap}>
       <Header /><Nota /><SearchInput />
-      <GroupTitle>Codici</GroupTitle>
+      {codici.filter(c => c.num_articoli > 0).length > 0 && <GroupTitle>Codici</GroupTitle>}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(260px,1fr))', gap: 10 }}>
         {codici.filter(c => c.num_articoli > 0).map((c) => (
           <div key={c.id} onClick={() => openCodice(c)}
@@ -7956,6 +7960,7 @@ function SidebarNav({ activeTab, setActiveTab }) {
 function RightPanel() {
   const [trending, setTrending] = useState([]);
   const [stats, setStats] = useState(null);
+  const [corpusAtti, setCorpusAtti] = useState(null);
 
   useEffect(() => {
     fetch(API + "/api/codici/trending?periodo=30&limit=8")
@@ -7966,6 +7971,10 @@ function RightPanel() {
       .then(r => r.json())
       .then(d => setStats(d))
       .catch(() => {});
+    fetch(API + "/api/norme/codici")
+      .then(r => r.json())
+      .then(d => { if (d && d.ok) setCorpusAtti(d.totale_atti || 0); })
+      .catch(() => {});
   }, []);
 
   return (
@@ -7974,7 +7983,7 @@ function RightPanel() {
         {[
           { label:"Articoli", val: stats?.articles || "—" },
           { label:"Fonti", val: stats?.sources || "—" },
-          { label:"Codici DB", val:"559+" },
+          { label:"Atti corpus", val: corpusAtti || "—" },
         ].map((s,i) => (
           <div key={i} style={{ flex:1, textAlign:"center", borderRight: i<2 ? `1px solid var(--eg-border)` : "none" }}>
             <div style={{ fontSize:18, fontWeight:800, color:"var(--eg-accent)", fontFamily:"monospace" }}>{typeof s.val === "number" ? s.val.toLocaleString() : s.val}</div>
@@ -7987,7 +7996,7 @@ function RightPanel() {
       </div>
       {trending.length === 0 ? (
         <div style={{ padding:"16px", fontSize:12, color:"var(--eg-text-dim)", lineHeight:1.6 }}>
-          Le statistiche si popolano man mano che le notizie citano articoli di codice.
+          Le statistiche si popolano man mano che le notizie citano canoni e articoli del corpus.
           <div style={{ color:"var(--eg-accent)", fontSize:11, marginTop:4 }}>Attivo ogni domenica 03:00</div>
         </div>
       ) : (trending || []).map((t, i) => (
@@ -8005,14 +8014,13 @@ function RightPanel() {
       <div style={{ padding:"14px 16px 8px", borderTop:"1px solid var(--eg-border)", marginTop:"auto" }}>
         <div style={{ fontSize:10, fontWeight:700, color:"var(--eg-text-muted)", textTransform:"uppercase", letterSpacing:"0.1em", marginBottom:10 }}>🗂 Aree coperte</div>
         {[
-          { area:"Penale", color:"#C45C5C", fonti:6 },
-          { area:"Civile", color:"#5C8AC4", fonti:5 },
-          { area:"Lavoro", color:"#5CA065", fonti:4 },
-          { area:"Tributario", color:"#D4A053", fonti:5 },
-          { area:"Amministrativo", color:"#9B7EC4", fonti:4 },
-          { area:"Privacy / AI", color:"#5CBAC4", fonti:3 },
-          { area:"Bancario", color:"#C8A96E", fonti:4 },
-          { area:"UE", color:"#4A7FC4", fonti:3 },
+          { area:"Santa Sede", color:"#C8A96E", fonti:8 },
+          { area:"Diritto canonico", color:"#C46A7C", fonti:3 },
+          { area:"Stato e Chiese", color:"#5C8AC4", fonti:4 },
+          { area:"Chiesa in Italia", color:"#5CA065", fonti:7 },
+          { area:"Confessioni acattoliche", color:"#9B7EC4", fonti:4 },
+          { area:"Libertà religiosa", color:"#D4A053", fonti:3 },
+          { area:"Religioni nel mondo", color:"#5CBAC4", fonti:4 },
         ].map((a,i) => (
           <div key={i} style={{ display:"flex", alignItems:"center", gap:8, marginBottom:7 }}>
             <div style={{ width:10, height:10, borderRadius:3, background:a.color, flexShrink:0 }}/>
