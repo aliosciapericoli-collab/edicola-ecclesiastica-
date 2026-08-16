@@ -48,6 +48,21 @@ const ENTITIES = {
   sect: "§", deg: "°", ordm: "º", ordf: "ª", laquo: "«", raquo: "»",
   ldquo: "“", rdquo: "”", lsquo: "‘", rsquo: "’",
   ndash: "–", mdash: "—", hellip: "…", middot: "·",
+  // Latin-1 completo: i documenti multilingue di vatican.va usano tutto il set
+  aacute: "á", acirc: "â", atilde: "ã", auml: "ä", aring: "å", aelig: "æ",
+  ccedil: "ç", ecirc: "ê", euml: "ë", iacute: "í", icirc: "î", iuml: "ï",
+  ntilde: "ñ", oacute: "ó", ocirc: "ô", otilde: "õ", ouml: "ö", oslash: "ø",
+  uacute: "ú", ucirc: "û", uuml: "ü", yacute: "ý", yuml: "ÿ", szlig: "ß",
+  Aacute: "Á", Acirc: "Â", Atilde: "Ã", Auml: "Ä", Aring: "Å", AElig: "Æ",
+  Ccedil: "Ç", Ecirc: "Ê", Euml: "Ë", Iacute: "Í", Icirc: "Î", Iuml: "Ï",
+  Ntilde: "Ñ", Oacute: "Ó", Ocirc: "Ô", Otilde: "Õ", Ouml: "Ö", Oslash: "Ø",
+  Uacute: "Ú", Ucirc: "Û", Uuml: "Ü", Yacute: "Ý",
+  times: "×", divide: "÷", plusmn: "±", sup1: "¹", sup2: "²", sup3: "³",
+  frac12: "½", frac14: "¼", frac34: "¾", micro: "µ", para: "¶", copy: "©",
+  reg: "®", trade: "™", euro: "€", pound: "£", cent: "¢", yen: "¥",
+  iexcl: "¡", iquest: "¿", shy: "", oelig: "œ", OElig: "Œ", scaron: "š", Scaron: "Š",
+  bull: "•", dagger: "†", Dagger: "‡", permil: "‰", prime: "′", Prime: "″",
+  sbquo: "‚", bdquo: "„", lsaquo: "‹", rsaquo: "›", ensp: " ", emsp: " ", thinsp: " ",
 };
 
 function decodeEntities(s) {

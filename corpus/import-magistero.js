@@ -48,13 +48,34 @@ function annoDaSlug(slug) {
   return m ? parseInt(m[1], 10) : null;
 }
 
+/**
+ * Estrae il SOLO contenitore del documento dalle pagine vatican.va moderne
+ * (<div class="documento">…</div>, chiusura trovata bilanciando i div).
+ * Le pagine vecchie (es. Concilio Vaticano II) non hanno il contenitore:
+ * si torna alla pagina intera, che pulisciTesto ripulisce riga per riga.
+ */
+function estraiDocumento(html) {
+  const start = html.search(/<div[^>]+class="[^"]*\bdocumento\b[^"]*"/i);
+  if (start < 0) return html;
+  const re = /<\/?div\b/gi;
+  re.lastIndex = start;
+  let depth = 0, m;
+  while ((m = re.exec(html))) {
+    if (html[m.index + 1] === "/") { depth--; if (depth === 0) return html.slice(start, m.index); }
+    else depth++;
+  }
+  return html.slice(start);
+}
+
 /** Rimuove la boilerplate di navigazione delle pagine vatican.va. */
 function pulisciTesto(text) {
   const righe = text.split("\n");
   const out = [];
   const BOILER = /^(IT|EN|ES|FR|DE|PT|PL|LA|AR|ZH|HU|HR|SW|SQ|BE|CS|SK|UK|RU|RO|LV|MK|SL)$|^\s*(Home|Ricerca|Stampa|Indice|Udienze|Angelus|Discorsi|Omelie|Lettere|Viaggi|Biografia|Elezione|Conclave|© Copyright|Copyright ©|Libreria Editrice Vaticana|La Santa Sede|Sala Stampa)\b/i;
+  const LINGUE = /^-?\s*[A-Z]{2}\s*$|^\[?\s*(?:[A-Z]{2}\s*-\s*)+[A-Z]{2}\s*\]?$/; // "- ES", "[ AR - BE - … ]"
   for (const r of righe) {
-    if (BOILER.test(r.trim())) continue;
+    const t = r.trim();
+    if (BOILER.test(t) || LINGUE.test(t)) continue;
     out.push(r);
   }
   return out.join("\n").replace(/\n{3,}/g, "\n\n").trim();
@@ -120,6 +141,26 @@ async function run({ db, budget, maxAtti = Infinity } = {}) {
 
   const catalogo = await costruisciCoda(db);
 
+  // BONIFICA: i documenti scaricati prima dell'estrazione mirata contengono
+  // il menù del sito (lingue, "Celebrazioni Liturgiche", entità &ccedil;…).
+  // Si rimettono in coda e vengono riscaricati puliti in questo stesso run.
+  try {
+    const sporchi = db.prepare(`
+      SELECT DISTINCT atto_urn FROM articoli
+      WHERE atto_urn LIKE 'urn:vatican:magistero:%'
+        AND (testo_vigente LIKE '%Celebrazioni Liturgiche%'
+          OR testo_vigente LIKE '%&ccedil;%'
+          OR testo_vigente LIKE '%&ntilde;%'
+          OR testo_vigente LIKE '%&times;%')
+    `).all();
+    if (sporchi.length) {
+      const requeue = db.prepare("UPDATE coda_priorita SET stato='pending', nota='bonifica boilerplate' WHERE urn=?");
+      const tx = db.transaction((rows) => { for (const r of rows) requeue.run(r.atto_urn); });
+      tx(sporchi);
+      console.log(`[MAG] Bonifica: ${sporchi.length} documenti con boilerplate rimessi in coda`);
+    }
+  } catch (e) { console.warn(`[MAG] Bonifica saltata: ${e.message}`); }
+
   let atti = 0;
   for (;;) {
     if (atti >= maxAtti) break;
@@ -129,7 +170,7 @@ async function run({ db, budget, maxAtti = Infinity } = {}) {
     const info = catalogo.get(voce.urn);
     if (!info) { store.markQueue(db, voce.urn, "error", "URL non più nel catalogo"); continue; }
     try {
-      const testo = pulisciTesto(htmlToText(fetchHtml(info.url)));
+      const testo = pulisciTesto(htmlToText(estraiDocumento(fetchHtml(info.url))));
       if (testo.length < 300) throw new Error(`testo troppo corto (${testo.length} caratteri)`);
       const slug = slugDaUrl(info.url);
       store.upsertAtto(db, {

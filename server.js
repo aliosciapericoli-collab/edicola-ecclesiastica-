@@ -117,6 +117,20 @@ function bootJobs() {
         }
         setTimeout(()=>{ runCorpus(); setInterval(runCorpus, 86400000); }, d);
         console.log('[Jobs] Corpus ecclesiastico ogni notte 02:30 (fra '+Math.round(d/60000)+' min)');
+        // BONIFICA all'avvio: se il corpus contiene documenti col menù del
+        // sito al posto del testo (importati prima dell'estrazione mirata),
+        // il giro parte SUBITO invece di aspettare le 02:30 — il budget
+        // giornaliero resta comunque il tetto.
+        setTimeout(() => {
+          try {
+            const ndbB = getNormativaBB();
+            if (!ndbB) return;
+            const sporchi = ndbB.prepare(
+              "SELECT COUNT(*) c FROM articoli WHERE atto_urn LIKE 'urn:vatican:magistero:%' AND (testo_vigente LIKE '%Celebrazioni Liturgiche%' OR testo_vigente LIKE '%&ccedil;%')"
+            ).get().c;
+            if (sporchi > 0) { console.log('[Corpus] Bonifica: ' + sporchi + ' documenti sporchi — avvio subito il giro.'); runCorpus(); }
+          } catch (e) { /* tabella assente: niente da bonificare */ }
+        }, 3 * 60 * 1000);
       })();
     } catch(e) { console.warn('[Jobs] init err:', e.message); }
     // Modulo 6 — Scraper istituzionali (ogni 30 min)

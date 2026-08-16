@@ -4504,7 +4504,7 @@ function PageNorme() {
           <div style={{ fontSize: 11.5, color: 'var(--eg-text-dim)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>
             {(art.codice_nome || (sel && sel.nome) || '')}{art.codice_sigla ? ` · ${art.codice_sigla}` : ''}
           </div>
-          <h2 style={{ fontSize: 21, fontWeight: 800, color: 'var(--eg-text)', margin: '0 0 4px' }}>{sel && sel.canoni ? 'Can.' : 'Art.'} {art.numero}</h2>
+          <h2 style={{ fontSize: 21, fontWeight: 800, color: 'var(--eg-text)', margin: '0 0 4px' }}>{String(art.numero) === 'testo' ? 'Testo integrale' : (sel && sel.canoni ? 'Can. ' : 'Art. ') + art.numero}</h2>
           {art.titolo && <div style={{ fontSize: 15, fontStyle: 'italic', color: 'var(--eg-text-muted)', marginBottom: 14 }}>{art.titolo}</div>}
           <div style={{ fontSize: 15.5, lineHeight: 1.75, color: 'var(--eg-text)', whiteSpace: 'pre-wrap' }}>{art.testo}</div>
 
@@ -4578,7 +4578,7 @@ function PageNorme() {
               style={{ ...card, padding: '10px 12px', cursor: 'pointer' }}
               onMouseEnter={e => e.currentTarget.style.background = 'var(--eg-surface-hover)'}
               onMouseLeave={e => e.currentTarget.style.background = 'var(--eg-surface)'}>
-              <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--eg-accent)' }}>{sel.canoni ? 'Can.' : 'Art.'} {a.numero}</div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--eg-accent)' }}>{String(a.numero) === 'testo' ? 'Documento' : (sel.canoni ? 'Can. ' : 'Art. ') + a.numero}</div>
               {a.titolo && <div style={{ fontSize: 12, color: 'var(--eg-text-muted)', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{a.titolo}</div>}
             </div>
           ))}
