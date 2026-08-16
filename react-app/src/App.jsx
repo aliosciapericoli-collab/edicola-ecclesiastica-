@@ -4543,7 +4543,7 @@ function PageNorme() {
   if (risultati !== null) {
     return (
       <div style={wrap}>
-        <Header />{searchInput}
+        <Header /><Nota />{searchInput}
         <div style={{ fontSize: 12.5, color: 'var(--eg-text-muted)', marginBottom: 10 }}>{risultati.length} risultati per “{q}”</div>
         {risultati.length === 0 && <div style={{ color: 'var(--eg-text-dim)', fontSize: 14 }}>Nessun articolo trovato.</div>}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
