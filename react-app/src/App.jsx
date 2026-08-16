@@ -4554,7 +4554,7 @@ function PageNorme() {
               style={{ ...card, padding: '12px 14px', cursor: 'pointer' }}
               onMouseEnter={e => e.currentTarget.style.background = 'var(--eg-surface-hover)'}
               onMouseLeave={e => e.currentTarget.style.background = 'var(--eg-surface)'}>
-              <div style={{ fontSize: 13.5, fontWeight: 700, color: 'var(--eg-text)' }}>Art. {r.numero} <span style={{ color: 'var(--eg-text-muted)', fontWeight: 500 }}>· {r.codice_sigla || r.codice_nome}</span></div>
+              <div style={{ fontSize: 13.5, fontWeight: 700, color: 'var(--eg-text)' }}>{String(r.numero) === 'testo' ? 'Documento' : (/^urn:vatican:(cic|cceo)/.test(r.atto_urn || '') ? 'Can. ' : 'Art. ') + r.numero} <span style={{ color: 'var(--eg-text-muted)', fontWeight: 500 }}>· {r.codice_sigla || r.codice_nome}</span></div>
               {r.titolo && <div style={{ fontSize: 12.5, fontStyle: 'italic', color: 'var(--eg-text-muted)', margin: '2px 0' }}>{r.titolo}</div>}
               {r.snippet && <div style={{ fontSize: 12.5, color: 'var(--eg-text-dim)', lineHeight: 1.5 }} dangerouslySetInnerHTML={{ __html: (r.snippet || '').replace(/\[/g, '<mark style="background:rgba(200,169,110,0.35);color:inherit">').replace(/\]/g, '</mark>') }} />}
             </div>
