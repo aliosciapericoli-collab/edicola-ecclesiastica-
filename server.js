@@ -278,7 +278,22 @@ function getNormativaDBW() {
   if (!Database) return null;
   try {
     if (!require('fs').existsSync(NORMATIVA_DB_PATH)) return null;
-    if (!_normDBW) { _normDBW = new Database(NORMATIVA_DB_PATH); _normDBW.pragma('journal_mode = WAL'); }
+    if (!_normDBW) {
+      _normDBW = new Database(NORMATIVA_DB_PATH);
+      _normDBW.pragma('journal_mode = WAL');
+      // La tabella della cache Analisi AI non fa parte dello schema del
+      // downloader (corpus/db.js): senza questa creazione lazy l'endpoint
+      // atto-analisi cade con "no such table: analisi_articolo".
+      _normDBW.exec(`CREATE TABLE IF NOT EXISTS analisi_articolo (
+        atto_urn TEXT NOT NULL,
+        numero_articolo TEXT NOT NULL,
+        spiegazione TEXT,
+        ambito TEXT,
+        giurisprudenza TEXT,
+        generato_at TEXT,
+        UNIQUE(atto_urn, numero_articolo)
+      )`);
+    }
   } catch(e) { return null; }
   return _normDBW;
 }
@@ -534,17 +549,17 @@ function generateWeeklyHTML(trending, sentenze, contrasti, totNotizie) {
 }
 
 // ── Classificazione articoli per area giuridica ────────────
-function classifyArticle(article) {
-  // Classificatore ecclesiastico v2: aree = santa_sede, diritto_canonico,
-  // stato_chiese, chiesa_italia, confessioni_acattoliche, liberta_religiosa,
-  // religioni_mondo. Prima il CONTENUTO (titolo+descrizione, che dopo la
-  // traduzione è in italiano; le chiavi inglesi coprono il pre-traduzione),
-  // in ordine di specificità; la categoria del feed è solo il ripiego finale.
-  const cat = (article.category || '').toLowerCase();
-  // Punteggiatura → spazi, così ' papa ' aggancia anche "Papa:" o "(Papa)";
-  // spazi ai bordi per le chiavi con confini di parola (' cei ').
-  const t = (' ' + ((article.title || '') + ' ' + (article.desc || article.description || '')).toLowerCase()
+// Punteggiatura → spazi, così ' papa ' aggancia anche "Papa:" o "(Papa)";
+// spazi ai bordi per le chiavi con confini di parola (' cei ').
+function _testoNorm(article) {
+  return (' ' + ((article.title || '') + ' ' + (article.desc || article.description || '')).toLowerCase()
     .replace(/[^a-z0-9àèéìòùáéíóúüö]/g, ' ') + ' ').replace(/\s+/g, ' ');
+}
+
+// Classificazione dal CONTENUTO (titolo+descrizione, che dopo la traduzione è
+// in italiano; le chiavi inglesi coprono il pre-traduzione), in ordine di
+// specificità. Restituisce null se nessuna chiave aggancia.
+function _classifyByContent(t) {
   const ha = (...parole) => parole.some(p => t.includes(p));
 
   if (ha('diritto canonico', 'rota romana', 'tribunale ecclesiastico', 'nullità matrimonial', 'matrimonio canonico',
@@ -578,29 +593,49 @@ function classifyArticle(article) {
          'chiesa cattolica', 'catholic church', 'clergy', 'clero '))
     return 'religioni_mondo';
 
-  // Categoria del feed (già ecclesiastica) come ripiego
+  return null;
+}
+
+function classifyArticle(article) {
+  // Aree = santa_sede, diritto_canonico, stato_chiese, chiesa_italia,
+  // confessioni_acattoliche, liberta_religiosa, religioni_mondo.
+  // Prima il contenuto; la categoria del feed è solo il ripiego finale.
+  const hit = _classifyByContent(_testoNorm(article));
+  if (hit) return hit;
+  const cat = (article.category || '').toLowerCase();
   if (['santa_sede','diritto_canonico','stato_chiese','chiesa_italia',
        'confessioni_acattoliche','liberta_religiosa','religioni_mondo'].includes(cat)) return cat;
-
   return 'religioni_mondo';
 }
 
-// Fuori tema: scarta i pezzi chiaramente estranei alla materia ecclesiastica
-// che le fonti specializzate a volte infilano nei loro feed (recensioni
-// musicali, sanità generica, sport, mercati). Un articolo si salva se
-// contiene almeno un termine religioso.
+// Termini religiosi "larghi": bastano a tenere in pagina un articolo che il
+// classificatore non sa incasellare (finirà nell'area del suo feed).
+const RELIGIOSO_HINT = ['chies', 'papa', 'papale', 'pontif', 'vescov', 'cardinal', 'monsignor', 'dioces', 'parrocchi',
+  'religio', 'cattolic', 'cristian', 'catholic', 'christian', 'church', 'pope ', 'bishop', 'faith ', ' fede ', ' dio ', ' god ',
+  'gesù', 'cristo', 'christ ', 'madonna', 'vangelo', 'gospel', 'bibbia', 'bible', 'biblic', 'teolog', 'theolog',
+  'liturg', 'omelia', 'angelus', 'giubileo', 'jubilee', 'pellegrin', 'pilgrim', 'santuario', 'abbazia', 'convento',
+  'monaster', 'monac', ' suor', 'frate ', 'frati ', 'gesuit', 'jesuit', 'francescan', 'franciscan', 'domenican',
+  'salesian', 'benedettin', 'carmelitan', 'clero', 'clergy', 'sacerdot', 'priest', 'seminarist', 'catechis', 'battesim',
+  'eucarist', 'sacrament', 'preghiera', 'prayer', 'worship', 'spiritual', 'ecumeni', 'interreligio', 'interfaith',
+  'sinodo', 'synod', 'concilio', 'conclave', 'curia', 'nunz', 'dicastero', 'enciclica', 'encyclical', 'magistero',
+  'canonic', 'canon law', 'vatican', 'santa sede', 'holy see', 'terra santa', 'holy land', 'santo padre', 'holy father',
+  'islam', 'musulman', 'muslim', 'moschea', 'mosque', 'imam ', 'corano', 'quran', 'ramadan', 'halal',
+  'ebraic', 'ebraismo', 'ebre', 'jewish', 'judais', 'rabbin', 'rabbi ', 'sinagoga', 'synagogue', 'torah', 'kasher', 'kosher',
+  'shoah', 'antisemit', 'shofar', 'hindu', 'induis', 'buddh', 'buddis', 'sikh', 'ortodoss', 'orthodox', 'patriarc',
+  'protestant', 'evangelic', 'luteran', 'lutheran', 'valdes', 'metodist', 'methodist', 'pentecost', 'avventist',
+  'mormon', 'testimoni di geova', 'laicità', 'laicismo', 'secolarizz', 'secular', 'blasfem', 'blasphem', 'apostasia',
+  'ateis', 'atheis', 'uaar', '8 per mille', 'otto per mille', '8xmille', 'concordat', 'caritas', 'culto ', 'santo ', 'santa messa',
+  'assunzione', 'beata vergine', 'vergine maria', 'immacolata', 'precetto', 'cappellan', 'chaplain', 'martir', 'martyr',
+  'processione', ' sacro ', 'aborto', 'abortion', 'eutanasia', 'euthanasia', 'bioetic', 'bioethic', 'surrogata', 'surrogacy',
+  'pillar post'];
+
+// Fuori tema: senza NESSUN segnale religioso (né classificazione dal
+// contenuto, né termine religioso "largo") l'articolo non appartiene alla
+// materia ecclesiastica e non si pubblica — qualunque sia la fonte.
 function isFuoriTema(article) {
-  const t = (' ' + ((article.title || '') + ' ' + (article.desc || article.description || '')).toLowerCase()
-    .replace(/[^a-z0-9àèéìòùáéíóúüö]/g, ' ') + ' ').replace(/\s+/g, ' ');
-  const OFFTOPIC = ['influenza aviaria', 'stipendi', 'infermier', ' hiv ', "l'hiv", 'tubercolosi', 'vaccino contro',
-    'calciomercato', 'serie a', 'campionato', 'festival di sanremo', 'recensione', 'classifica musicale',
-    ' album ', 'canzone', 'canzoni', 'discografi', 'cantautor', 'rockstar', 'tournée',
-    'borsa di milano', 'wall street', 'inflazione', 'tassi di interesse', 'oroscopo', 'meteo ', 'ricetta '];
-  if (!OFFTOPIC.some(p => t.includes(p))) return false;
-  const RELIGIOSO = ['chiesa', 'chies', 'papa', 'vescov', 'dioces', 'parrocchi', 'religio', 'cattolic', 'cristian',
-    'fede ', 'vangelo', 'islam', 'ebraic', 'ebraismo', 'moschea', 'sinagoga', 'rabbino', 'liturg', 'preghiera',
-    'vatican', 'clero', 'monaster', 'suor', 'frate ', 'teolog', 'bibbia', 'pastorale', 'caritas', 'missionar', 'culto'];
-  return !RELIGIOSO.some(p => t.includes(p));
+  const t = _testoNorm(article);
+  if (_classifyByContent(t)) return false;
+  return !RELIGIOSO_HINT.some(p => t.includes(p));
 }
 
 
@@ -3559,8 +3594,12 @@ http.createServer((req, res) => {
                                  WHERE a.atto_urn=? AND a.numero_articolo=? LIMIT 1`).get(urn, numero);
         if (!art) { res.writeHead(404); res.end(JSON.stringify({ ok: false, error: 'articolo non trovato' })); return; }
 
-        // 1) CACHE
-        const cached = ndb.prepare('SELECT spiegazione, ambito, giurisprudenza, generato_at FROM analisi_articolo WHERE atto_urn=? AND numero_articolo=? LIMIT 1').get(urn, numero);
+        // 1) CACHE — tollerante: se la tabella non esiste ancora (viene creata
+        // dal primo salvataggio via getNormativaDBW) si genera e basta.
+        let cached = null;
+        try {
+          cached = ndb.prepare('SELECT spiegazione, ambito, giurisprudenza, generato_at FROM analisi_articolo WHERE atto_urn=? AND numero_articolo=? LIMIT 1').get(urn, numero);
+        } catch (e) { /* no such table: prima analisi di sempre */ }
         if (cached && cached.spiegazione) {
           res.end(JSON.stringify({ ok: true, cached: true, generato_at: cached.generato_at || null,
             analisi: { spiegazione: cached.spiegazione, ambito: cached.ambito || '', giurisprudenza: cached.giurisprudenza || '' } }));
