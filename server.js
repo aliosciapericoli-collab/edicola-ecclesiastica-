@@ -598,7 +598,7 @@ function _classifyByContent(t) {
          'angelus', 'udienza generale', 'concistoro', 'dicastero', 'enciclica', 'esortazione apostolica',
          'pope ', 'pontiff', 'holy see', 'cardinal') || t.startsWith(' papa '))
     return 'santa_sede';
-  if (ha(' cei ', 'conferenza episcopale italiana', 'diocesi di', 'arcidiocesi', 'parrocchi', 'oratorio', 'caritas',
+  if (ha(' cei ', 'conferenza episcopale italiana', 'diocesi di', 'arcidiocesi', 'parrocchi', ' oratorio ', 'caritas',
          'azione cattolica', 'otto x mille') ||
       (ha('vescov', 'diocesi', 'dioces') && ha('itali', 'milano', 'roma', 'napoli', 'torino', 'bologna', 'firenze', 'palermo', 'venezia')))
     return 'chiesa_italia';
@@ -623,34 +623,60 @@ function classifyArticle(article) {
   return 'religioni_mondo';
 }
 
-// Termini religiosi "larghi": bastano a tenere in pagina un articolo che il
-// classificatore non sa incasellare (finirà nell'area del suo feed).
-const RELIGIOSO_HINT = ['chies', 'papa', 'papale', 'pontif', 'vescov', 'cardinal', 'monsignor', 'dioces', 'parrocchi',
-  'religio', 'cattolic', 'cristian', 'catholic', 'christian', 'church', 'pope ', 'bishop', 'faith ', ' fede ', ' dio ', ' god ',
-  'gesù', 'cristo', 'christ ', 'madonna', 'vangelo', 'gospel', 'bibbia', 'bible', 'biblic', 'teolog', 'theolog',
+// Segnali religiosi FORTI: uno solo, ovunque compaia, prova la connessione
+// reale con la materia (istituzioni, ministri, luoghi e pratiche di culto,
+// diritto ecclesiastico, comunità confessionali).
+const RELIGIOSO_FORTE = ['chies', 'papa', 'papale', 'pontif', 'vescov', 'cardinal', 'monsignor', 'dioces', 'parroc',
+  'religio', 'cattolic', 'cristian', 'catholic', 'christian', 'church', 'pope ', 'bishop',
+  'gesù', 'vangelo', 'gospel', 'bibbia', 'bible', 'biblic', 'teolog', 'theolog',
   'liturg', 'omelia', 'angelus', 'giubileo', 'jubilee', 'pellegrin', 'pilgrim', 'santuario', 'abbazia', 'convento',
   'monaster', 'monac', ' suor', 'frate ', 'frati ', 'gesuit', 'jesuit', 'francescan', 'franciscan', 'domenican',
-  'salesian', 'benedettin', 'carmelitan', 'clero', 'clergy', 'sacerdot', 'priest', 'seminarist', 'catechis', 'battesim',
-  'eucarist', 'sacrament', 'preghiera', 'prayer', 'worship', 'spiritual', 'ecumeni', 'interreligio', 'interfaith',
+  'salesian', 'benedettin', 'carmelitan', 'clero', 'clergy', 'sacerdot', 'priest', 'prete ', 'preti ', 'seminarist', 'catechis', 'battesim',
+  'eucarist', 'sacrament', 'ecumeni', 'interreligio', 'interfaith',
   'sinodo', 'synod', 'concilio', 'conclave', 'curia', 'nunz', 'dicastero', 'enciclica', 'encyclical', 'magistero',
   'canonic', 'canon law', 'vatican', 'santa sede', 'holy see', 'terra santa', 'holy land', 'santo padre', 'holy father',
   'islam', 'musulman', 'muslim', 'moschea', 'mosque', 'imam ', 'corano', 'quran', 'ramadan', 'halal',
   'ebraic', 'ebraismo', 'ebre', 'jewish', 'judais', 'rabbin', 'rabbi ', 'sinagoga', 'synagogue', 'torah', 'kasher', 'kosher',
   'shoah', 'antisemit', 'shofar', 'hindu', 'induis', 'buddh', 'buddis', 'sikh', 'ortodoss', 'orthodox', 'patriarc',
   'protestant', 'evangelic', 'luteran', 'lutheran', 'valdes', 'metodist', 'methodist', 'pentecost', 'avventist',
-  'mormon', 'testimoni di geova', 'laicità', 'laicismo', 'secolarizz', 'secular', 'blasfem', 'blasphem', 'apostasia',
-  'ateis', 'atheis', 'uaar', '8 per mille', 'otto per mille', '8xmille', 'concordat', 'caritas', 'culto ', 'santo ', 'santa messa',
-  'assunzione', 'beata vergine', 'vergine maria', 'immacolata', 'precetto', 'cappellan', 'chaplain', 'martir', 'martyr',
-  'processione', ' sacro ', 'aborto', 'abortion', 'eutanasia', 'euthanasia', 'bioetic', 'bioethic', 'surrogata', 'surrogacy',
-  'pillar post'];
+  'mormon', 'testimoni di geova', 'laicità', 'laicismo', 'blasfem', 'blasphem', 'apostasia',
+  'ateis', 'atheis', 'uaar', '8 per mille', 'otto per mille', '8xmille', 'concordat', 'caritas', 'santa messa',
+  'beata vergine', 'vergine maria', 'immacolata', 'cappellan', 'chaplain', 'pillar post', 'libertà religiosa', 'religious freedom',
+  'passionist', 'cappuccin', 'agostinian', 'cistercens', 'trappist', 'comboni', 'dehonian', 'focolar', 'neocatecumen', 'opus dei',
+  'cristo', 'christ ', 'preghiera', 'prayer', 'tempo ordinario', 'per annum', 'beata ', 'comandament', 'commandment',
+  'celebra messa', 'celebrare messa', 'quaresima', 'avvento ', 'pentecoste', 'pasqua', 'natale ', 'epifania', 'easter', 'lent '];
 
-// Fuori tema: senza NESSUN segnale religioso (né classificazione dal
-// contenuto, né termine religioso "largo") l'articolo non appartiene alla
-// materia ecclesiastica e non si pubblica — qualunque sia la fonte.
+// Segnali DEBOLI: parole che compaiono spesso anche in articoli profani
+// ("santo", "fede", "sacro", "spiritual"…). Da sole non bastano: valgono
+// solo nel TITOLO, oppure in coppia.
+const RELIGIOSO_DEBOLE = ['faith ', ' fede ', ' dio ', ' god ', 'madonna',
+  'worship', 'spiritual', 'secolarizz', 'secular', 'culto ', 'santo ', 'santa ', ' sacro ', 'assunzione', 'precetto',
+  'martir', 'martyr', 'processione', 'aborto', 'abortion', 'eutanasia', 'euthanasia', 'bioetic', 'bioethic',
+  'surrogata', 'surrogacy', 'pastorale', 'anima '];
+
+// Fuori tema: resta in pagina solo chi ha una connessione religiosa REALE.
+// Punteggio: forte nel TITOLO = 3 · forte nel testo = 1,5 l'uno · debole nel
+// titolo = 1,5 · debole nel testo = 0,5. Si pubblica con almeno 3 punti (o
+// se le parole chiave delle aree agganciano il contenuto). Così un solo
+// accenno in fondo alla descrizione non basta più: o l'argomento è religioso
+// nel titolo, o il testo ne parla davvero (più segnali indipendenti).
 function isFuoriTema(article) {
-  const t = _testoNorm(article);
-  if (_classifyByContent(t)) return false;
-  return !RELIGIOSO_HINT.some(p => t.includes(p));
+  const tTitolo = _testoNorm({ title: article.title || '' });
+  const tTutto = _testoNorm(article);
+  if (_classifyByContent(tTutto)) return false;
+  let punti = 0;
+  for (const p of RELIGIOSO_FORTE) {
+    if (tTitolo.includes(p)) { punti = 3; break; }
+    if (tTutto.includes(p)) punti += 1.5;
+    if (punti >= 3) break;
+  }
+  if (punti >= 3) return false;
+  for (const p of RELIGIOSO_DEBOLE) {
+    if (tTitolo.includes(p)) punti += 1.5;
+    else if (tTutto.includes(p)) punti += 0.5;
+    if (punti >= 3) return false;
+  }
+  return punti < 3;
 }
 
 
