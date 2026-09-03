@@ -701,7 +701,9 @@ function isCasoDubbio(article) {
 const _attinCache = new Map();
 const ATTIN_CACHE_MAX = 4000;
 function _attinKey(a) {
-  return (a.title || '').toLowerCase().replace(/[^a-zà-ù0-9]/g, '').substring(0, 70);
+  // il prefisso versiona i verdetti: cambiando il prompt del giudice, la
+  // cache vecchia decade da sola e i dubbi vengono rigiudicati.
+  return 'v2:' + (a.title || '').toLowerCase().replace(/[^a-zà-ù0-9]/g, '').substring(0, 70);
 }
 async function filtraAttinenzaAI(items) {
   const dubbi = items.filter(a => isCasoDubbio(a) && !_attinCache.has(_attinKey(a)));
@@ -714,7 +716,10 @@ async function filtraAttinenzaAI(items) {
         model: 'claude-haiku-4-5', max_tokens: 400, temperature: 0,
         messages: [{ role: 'user', content:
           'Sei il caporedattore di una testata dedicata ESCLUSIVAMENTE a: religioni e confessioni, chiese e comunità di fede, Santa Sede, diritto canonico ed ecclesiastico, rapporti Stato-religioni, libertà religiosa. ' +
-          'Per ogni notizia (titolo t, sommario d) rispondi se è attinente alla testata: true solo se la religione è il tema o una componente REALE della notizia, false se è cronaca/sport/scienza/cultura generica dove la religione è solo citata di sfuggita o assente. ' +
+          'Per ogni notizia (titolo t, sommario d) rispondi se è attinente alla testata: true solo se la religione è il tema o una componente REALE della notizia stessa. ' +
+          'ATTENZIONE: la fonte religiosa NON basta — se media vaticani, cattolici o confessionali raccontano sport, spettacolo, scienza, cronaca o cultura generica senza dimensione religiosa nel fatto raccontato, la risposta è false. ' +
+          'Esempi false: giochi sportivi o festival culturali raccontati dai media vaticani; "dialogo interculturale" generico; guerre e diplomazia senza attori o temi religiosi; salute e tecnologia. ' +
+          'Esempi true: parole di Papa/vescovi/rabbini/imam su qualunque tema; vita di comunità e ordini religiosi; liturgia e feste religiose; leggi e processi che toccano i culti. ' +
           'Rispondi SOLO con un array JSON di booleani, stesso ordine e stesso numero.\n' + JSON.stringify(voci)
         }]
       };
