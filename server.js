@@ -626,25 +626,29 @@ function classifyArticle(article) {
 // Segnali religiosi FORTI: uno solo, ovunque compaia, prova la connessione
 // reale con la materia (istituzioni, ministri, luoghi e pratiche di culto,
 // diritto ecclesiastico, comunità confessionali).
-const RELIGIOSO_FORTE = ['chies', 'papa', 'papale', 'pontif', 'vescov', 'cardinal', 'monsignor', 'dioces', 'parroc',
+// N.B. confini di parola dove serve: 'inchiesta' contiene 'chies',
+// 'febbre'/'celebre' contengono 'ebre', 'interprete' contiene 'prete',
+// 'occulto' contiene 'culto', 'Islamabad' contiene 'islam'…
+const RELIGIOSO_FORTE = [' chies', ' papa ', 'papato', 'papale', 'pontif', 'vescov', 'cardinal', 'monsignor', 'dioces', 'parroc',
   'religio', 'cattolic', 'cristian', 'catholic', 'christian', 'church', 'pope ', 'bishop',
   'gesù', 'vangelo', 'gospel', 'bibbia', 'bible', 'biblic', 'teolog', 'theolog',
   'liturg', 'omelia', 'angelus', 'giubileo', 'jubilee', 'pellegrin', 'pilgrim', 'santuario', 'abbazia', 'convento',
-  'monaster', 'monac', ' suor', 'frate ', 'frati ', 'gesuit', 'jesuit', 'francescan', 'franciscan', 'domenican',
-  'salesian', 'benedettin', 'carmelitan', 'clero', 'clergy', 'sacerdot', 'priest', 'prete ', 'preti ', 'seminarist', 'catechis', 'battesim',
+  'monaster', ' monach', ' monaci ', ' suor', 'frate ', 'frati ', 'gesuit', 'jesuit', 'francescan', 'franciscan', 'domenican',
+  'salesian', 'benedettin', 'carmelitan', 'clero', 'clergy', 'sacerdot', 'priest', ' prete ', ' preti ', 'seminarist', 'catechis', 'battesim',
   'eucarist', 'sacrament', 'ecumeni', 'interreligio', 'interfaith',
   'sinodo', 'synod', 'concilio', 'conclave', 'curia', 'nunz', 'dicastero', 'enciclica', 'encyclical', 'magistero',
   'canonic', 'canon law', 'vatican', 'santa sede', 'holy see', 'terra santa', 'holy land', 'santo padre', 'holy father',
-  'islam', 'musulman', 'muslim', 'moschea', 'mosque', 'imam ', 'corano', 'quran', 'ramadan', 'halal',
-  'ebraic', 'ebraismo', 'ebre', 'jewish', 'judais', 'rabbin', 'rabbi ', 'sinagoga', 'synagogue', 'torah', 'kasher', 'kosher',
+  ' islam ', ' islami', 'musulman', 'muslim', 'moschea', 'mosque', 'imam ', 'corano', 'quran', 'ramadan', 'halal',
+  'ebraic', 'ebraismo', ' ebre', 'jewish', 'judais', 'rabbin', 'rabbi ', 'sinagoga', 'synagogue', 'torah', 'kasher', 'kosher',
   'shoah', 'antisemit', 'shofar', 'hindu', 'induis', 'buddh', 'buddis', 'sikh', 'ortodoss', 'orthodox', 'patriarc',
   'protestant', 'evangelic', 'luteran', 'lutheran', 'valdes', 'metodist', 'methodist', 'pentecost', 'avventist',
   'mormon', 'testimoni di geova', 'laicità', 'laicismo', 'blasfem', 'blasphem', 'apostasia',
   'ateis', 'atheis', 'uaar', '8 per mille', 'otto per mille', '8xmille', 'concordat', 'caritas', 'santa messa',
   'beata vergine', 'vergine maria', 'immacolata', 'cappellan', 'chaplain', 'pillar post', 'libertà religiosa', 'religious freedom',
   'passionist', 'cappuccin', 'agostinian', 'cistercens', 'trappist', 'comboni', 'dehonian', 'focolar', 'neocatecumen', 'opus dei',
-  'cristo', 'christ ', 'preghiera', 'prayer', 'tempo ordinario', 'per annum', 'beata ', 'comandament', 'commandment',
-  'celebra messa', 'celebrare messa', 'quaresima', 'avvento ', 'pentecoste', 'pasqua', 'natale ', 'epifania', 'easter', 'lent '];
+  ' cristo ', 'cristolog', 'christ ', 'preghiera', 'prayer', 'tempo ordinario', 'per annum', 'beata ', 'comandament', 'commandment',
+  'celebra messa', 'celebrare messa', 'quaresima', 'pentecoste', ' pasqua', ' natale ', 'epifania', 'easter', ' lent ',
+  ' mons ', 'prelat', 'leone xiv', 'leone xiii', 'pio xii', 'yad vashem', 'bokertov', 'seminario diocesan', ' seminarist'];
 
 // Segnali DEBOLI: parole che compaiono spesso anche in articoli profani
 // ("santo", "fede", "sacro", "spiritual"…). Da sole non bastano: valgono
@@ -677,6 +681,59 @@ function isFuoriTema(article) {
     if (punti >= 3) return false;
   }
   return punti < 3;
+}
+
+// "Caso dubbio": è passato dal punteggio ma il TITOLO da solo non prova
+// l'attinenza (né segnale forte né classificazione dal contenuto del titolo).
+// Sono gli articoli che entrano grazie alla descrizione — dove si annidano i
+// crediti di fonte e le trappole. Su questi decide il giudice AI.
+function isCasoDubbio(article) {
+  const tTitolo = _testoNorm({ title: article.title || '' });
+  if (_classifyByContent(tTitolo)) return false;
+  return !RELIGIOSO_FORTE.some(p => tTitolo.includes(p));
+}
+
+// GIUDICE AI DI ATTINENZA — secondo livello di controllo. I casi dubbi
+// vengono giudicati in blocco da Claude Haiku (attinente sì/no alla materia:
+// religioni, chiese, diritto canonico/ecclesiastico, rapporti Stato-fedi).
+// Verdetti in cache per titolo: ogni articolo si paga UNA volta sola.
+// In caso di errore API si tiene l'articolo (fail-open: mai pagina vuota).
+const _attinCache = new Map();
+const ATTIN_CACHE_MAX = 4000;
+function _attinKey(a) {
+  return (a.title || '').toLowerCase().replace(/[^a-zà-ù0-9]/g, '').substring(0, 70);
+}
+async function filtraAttinenzaAI(items) {
+  const dubbi = items.filter(a => isCasoDubbio(a) && !_attinCache.has(_attinKey(a)));
+  for (let i = 0; i < dubbi.length; i += 25) {
+    if (!canCallClaude('other')) break;
+    const batch = dubbi.slice(i, i + 25);
+    const voci = batch.map(a => ({ t: (a.title || '').substring(0, 160), d: ((a.desc || a.description || '') + '').replace(/<[^>]+>/g, ' ').substring(0, 200) }));
+    try {
+      const payload = {
+        model: 'claude-haiku-4-5', max_tokens: 400, temperature: 0,
+        messages: [{ role: 'user', content:
+          'Sei il caporedattore di una testata dedicata ESCLUSIVAMENTE a: religioni e confessioni, chiese e comunità di fede, Santa Sede, diritto canonico ed ecclesiastico, rapporti Stato-religioni, libertà religiosa. ' +
+          'Per ogni notizia (titolo t, sommario d) rispondi se è attinente alla testata: true solo se la religione è il tema o una componente REALE della notizia, false se è cronaca/sport/scienza/cultura generica dove la religione è solo citata di sfuggita o assente. ' +
+          'Rispondi SOLO con un array JSON di booleani, stesso ordine e stesso numero.\n' + JSON.stringify(voci)
+        }]
+      };
+      const resp = await _callClaude(payload, 30000);
+      if (resp.status !== 200) continue;
+      const txt = ((JSON.parse(resp.body).content || [])[0] || {}).text || '';
+      const m = txt.match(/\[[\s\S]*\]/);
+      if (!m) continue;
+      const arr = JSON.parse(m[0]);
+      if (!Array.isArray(arr) || arr.length !== batch.length) continue;
+      batch.forEach((a, j) => {
+        if (_attinCache.size >= ATTIN_CACHE_MAX) _attinCache.delete(_attinCache.keys().next().value);
+        _attinCache.set(_attinKey(a), arr[j] !== false);
+      });
+    } catch (e) { /* fail-open */ }
+  }
+  const scartati = items.filter(a => _attinCache.get(_attinKey(a)) === false).length;
+  if (scartati) console.log(`[AttinenzaAI] ${scartati} articoli giudicati fuori tema dal giudice AI`);
+  return items.filter(a => _attinCache.get(_attinKey(a)) !== false);
 }
 
 
@@ -1480,6 +1537,9 @@ async function refreshFeeds() {
   // Fuori tema: le fonti specializzate a volte pubblicano pezzi che con la
   // materia ecclesiastica non c'entrano nulla (musica, salute, sport, borsa).
   all = all.filter(a => !isFuoriTema(a));
+  // Secondo livello: i casi dubbi (attinenza provata solo dalla descrizione)
+  // passano dal giudice AI, con verdetti in cache — vedi filtraAttinenzaAI.
+  try { all = await filtraAttinenzaAI(all); } catch (e) { console.warn('[AttinenzaAI] salto:', e.message); }
   // Seconda dedup per titolo, ORA che i titoli sono tutti in italiano
   // (prende la stessa notizia arrivata con link diversi, es. GNews vs diretto).
   {
