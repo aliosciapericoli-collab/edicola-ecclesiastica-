@@ -703,13 +703,13 @@ const ATTIN_CACHE_MAX = 4000;
 function _attinKey(a) {
   // il prefisso versiona i verdetti: cambiando il prompt del giudice, la
   // cache vecchia decade da sola e i dubbi vengono rigiudicati.
-  return 'v2:' + (a.title || '').toLowerCase().replace(/[^a-zà-ù0-9]/g, '').substring(0, 70);
+  return 'v3:' + (a.title || '').toLowerCase().replace(/[^a-zà-ù0-9]/g, '').substring(0, 70);
 }
 async function filtraAttinenzaAI(items) {
   const dubbi = items.filter(a => isCasoDubbio(a) && !_attinCache.has(_attinKey(a)));
-  for (let i = 0; i < dubbi.length; i += 25) {
+  for (let i = 0; i < dubbi.length; i += 15) {
     if (!canCallClaude('other')) break;
-    const batch = dubbi.slice(i, i + 25);
+    const batch = dubbi.slice(i, i + 15);
     const voci = batch.map(a => ({ t: (a.title || '').substring(0, 160), d: ((a.desc || a.description || '') + '').replace(/<[^>]+>/g, ' ').substring(0, 200) }));
     try {
       const payload = {
@@ -718,8 +718,9 @@ async function filtraAttinenzaAI(items) {
           'Sei il caporedattore di una testata dedicata ESCLUSIVAMENTE a: religioni e confessioni, chiese e comunità di fede, Santa Sede, diritto canonico ed ecclesiastico, rapporti Stato-religioni, libertà religiosa. ' +
           'Per ogni notizia (titolo t, sommario d) rispondi se è attinente alla testata: true solo se la religione è il tema o una componente REALE della notizia stessa. ' +
           'ATTENZIONE: la fonte religiosa NON basta — se media vaticani, cattolici o confessionali raccontano sport, spettacolo, scienza, cronaca o cultura generica senza dimensione religiosa nel fatto raccontato, la risposta è false. ' +
-          'Esempi false: giochi sportivi o festival culturali raccontati dai media vaticani; "dialogo interculturale" generico; guerre e diplomazia senza attori o temi religiosi; salute e tecnologia. ' +
+          'Esempi false: giochi sportivi o festival culturali raccontati dai media vaticani (es. "World Nomad Games", olimpiadi, mostre) anche se citano ONU o "dialogo interculturale"; guerre e diplomazia senza attori o temi religiosi; salute e tecnologia. ' +
           'Esempi true: parole di Papa/vescovi/rabbini/imam su qualunque tema; vita di comunità e ordini religiosi; liturgia e feste religiose; leggi e processi che toccano i culti. ' +
+          'REGOLA FINALE: nel dubbio rispondi false — meglio escludere un caso limite che pubblicare un fuori tema. ' +
           'Rispondi SOLO con un array JSON di booleani, stesso ordine e stesso numero.\n' + JSON.stringify(voci)
         }]
       };
