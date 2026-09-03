@@ -664,9 +664,14 @@ const RELIGIOSO_DEBOLE = ['faith ', ' fede ', ' dio ', ' god ', 'madonna',
 // se le parole chiave delle aree agganciano il contenuto). Così un solo
 // accenno in fondo alla descrizione non basta più: o l'argomento è religioso
 // nel titolo, o il testo ne parla davvero (più segnali indipendenti).
+// Espulsioni nominative: casi accertati che superano sia il punteggio sia il
+// giudice AI (segnalati dal direttore). Pochi e mirati, non una lista pezze.
+const TITOLI_BANDITI = [/olimpiadi dei nomadi/i, /world nomad games/i];
+
 function isFuoriTema(article) {
   const tTitolo = _testoNorm({ title: article.title || '' });
   const tTutto = _testoNorm(article);
+  if (TITOLI_BANDITI.some(re => re.test(article.title || ''))) return true;
   if (_classifyByContent(tTutto)) return false;
   let punti = 0;
   for (const p of RELIGIOSO_FORTE) {
@@ -737,8 +742,8 @@ async function filtraAttinenzaAI(items) {
       });
     } catch (e) { /* fail-open */ }
   }
-  const scartati = items.filter(a => _attinCache.get(_attinKey(a)) === false).length;
-  if (scartati) console.log(`[AttinenzaAI] ${scartati} articoli giudicati fuori tema dal giudice AI`);
+  const bocciati = items.filter(a => _attinCache.get(_attinKey(a)) === false);
+  if (bocciati.length) console.log(`[AttinenzaAI] ${bocciati.length} fuori tema: ` + bocciati.slice(0, 4).map(a => '«' + (a.title || '').slice(0, 50) + '»').join(' · '));
   return items.filter(a => _attinCache.get(_attinKey(a)) !== false);
 }
 
