@@ -27,14 +27,14 @@ const QUERY_FTS = [
   '"diritto canonico"', '"diritto ecclesiastico"',
   '"matrimonio concordatario"', 'delibazione', '"tribunale ecclesiastico"',
   '"Rota Romana"', '"nullità del matrimonio canonico"', '"matrimonio canonico"',
-  '"ente ecclesiastico"', '"enti ecclesiastici"', 'concordato NEAR/5 chiesa',
+  '"ente ecclesiastico"', '"enti ecclesiastici"', 'NEAR(concordato chiesa, 5)',
   '"otto per mille"', '"8 per mille"', '"sostentamento del clero"',
   '"libertà religiosa"', '"libertà di culto"', '"confessione religiosa"',
   '"confessioni religiose"', '"ministro di culto"', '"ministri di culto"',
   '"edificio di culto"', '"edifici di culto"', '"culti ammessi"',
-  '"Santa Sede"', '"Città del Vaticano"', '"CEI" NEAR/10 vescovi',
+  '"Santa Sede"', '"Città del Vaticano"', 'NEAR("CEI" vescovi, 10)',
   '"comunità ebraica"', '"tavola valdese"', 'moschea', 'sinagoga',
-  '"simboli religiosi"', 'crocifisso NEAR/10 aula',
+  '"simboli religiosi"', 'NEAR(crocifisso aula, 10)',
   '"ora di religione"', '"insegnamento della religione"',
 ].join(" OR ");
 

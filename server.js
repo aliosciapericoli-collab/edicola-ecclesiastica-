@@ -501,11 +501,18 @@ try {
 // Carica source profiles
 let sourceProfiles = {};
 try {
-  sourceProfiles = JSON.parse(fs.readFileSync(__dirname + '/source_profiles.json', 'utf8')).sources || {};
+  // source_profiles.json tiene i profili al primo livello (chiave = nome
+  // fonte) più una voce "_meta": si accetta anche il vecchio formato con
+  // la proprietà "sources". Le chiavi che iniziano con "_" non sono profili.
+  const _spJson = JSON.parse(fs.readFileSync(__dirname + '/source_profiles.json', 'utf8'));
+  const _spMap = (_spJson && typeof _spJson.sources === 'object' && _spJson.sources) ? _spJson.sources : _spJson;
+  for (const [k, v] of Object.entries(_spMap || {})) { if (!k.startsWith('_') && v && typeof v === 'object') sourceProfiles[k] = v; }
 } catch(e) {}
+// Profilo di ripiego: mai undefined a valle (evita crash su /api/scalata/l0)
+const SOURCE_PROFILE_DEFAULT = { authority: 2, authority_score: 2, reliability: 2, type: 'sconosciuta', bias: null };
 
 function getSourceProfile(sourceName) {
-  if (!sourceName) return sourceProfiles['_default'];
+  if (!sourceName) return sourceProfiles['_default'] || SOURCE_PROFILE_DEFAULT;
   // Cerca corrispondenza esatta, poi parziale
   if (sourceProfiles[sourceName]) return sourceProfiles[sourceName];
   const lower = sourceName.toLowerCase();
@@ -515,7 +522,7 @@ function getSourceProfile(sourceName) {
       return sourceProfiles[key];
     }
   }
-  return sourceProfiles['_default'];
+  return sourceProfiles['_default'] || SOURCE_PROFILE_DEFAULT;
 }
 
 // ── Generazione HTML per alert settimanale ────────────

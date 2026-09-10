@@ -1,14 +1,15 @@
 #!/usr/bin/env node
 /**
  * sitemap-generator.js — Genera sitemap.xml per Edicola Ecclesiastica
- * Eseguire con cron ogni 6 ore: node /home/work/edicola/sitemap-generator.js
+ * Eseguire con cron ogni 6 ore: node /home/work/edicola-ecclesiastica/sitemap-generator.js
  * Non richiede SQLite — funziona con la struttura attuale
  */
 
 const fs = require('fs');
 const path = require('path');
 
-const OUTPUT_PATH = '/home/work/edicola/sitemap.xml';
+// Scritto accanto al server: è il percorso da cui server.js serve /sitemap.xml
+const OUTPUT_PATH = path.join(__dirname, 'sitemap.xml');
 const now = new Date().toISOString().slice(0, 10);
 
 // Pagine statiche sempre presenti

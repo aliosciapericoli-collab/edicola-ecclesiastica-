@@ -128,7 +128,12 @@ async function run({ db, budget } = {}) {
     n_articoli: arts.length,
     ordinamento: "canonico",
   });
-  const salvati = store.saveArticoli(db, URN, arts);
+  // Rispetta il tetto giornaliero anche qui: se il budget residuo è minore
+  // dei canoni raccolti si salva solo la parte coperta (il run successivo
+  // completa: saveArticoli è un upsert idempotente).
+  const daSalvare = budget ? arts.slice(0, Math.max(0, budget.remaining())) : arts;
+  if (daSalvare.length < arts.length) console.warn(`[CIC] Budget residuo ${daSalvare.length}/${arts.length}: salvataggio parziale, il resto al prossimo run`);
+  const salvati = store.saveArticoli(db, URN, daSalvare);
   if (budget) budget.spend(salvati);
   console.log(`[CIC] Salvati ${salvati} canoni in ${URN}`);
   if (own) db.close();
