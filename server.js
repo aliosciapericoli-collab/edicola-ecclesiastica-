@@ -776,7 +776,7 @@ const ATTIN_CACHE_MAX = 4000;
 function _attinKey(a) {
   // il prefisso versiona i verdetti: cambiando il prompt del giudice, la
   // cache vecchia decade da sola e i dubbi vengono rigiudicati.
-  return 'v3:' + (a.title || '').toLowerCase().replace(/[^a-zà-ù0-9]/g, '').substring(0, 70);
+  return 'v4:' + (a.title || '').toLowerCase().replace(/[^a-zà-ù0-9]/g, '').substring(0, 70);
 }
 async function filtraAttinenzaAI(items) {
   const dubbi = items.filter(a => isCasoDubbio(a) && !_attinCache.has(_attinKey(a)));
@@ -792,7 +792,7 @@ async function filtraAttinenzaAI(items) {
           'Per ogni notizia (titolo t, sommario d) rispondi se è attinente alla testata: true solo se la religione è il tema o una componente REALE della notizia stessa. ' +
           'ATTENZIONE: la fonte religiosa NON basta — se media vaticani, cattolici o confessionali raccontano sport, spettacolo, scienza, cronaca o cultura generica senza dimensione religiosa nel fatto raccontato, la risposta è false. ' +
           'Esempi false: giochi sportivi o festival culturali raccontati dai media vaticani (es. "World Nomad Games", olimpiadi, mostre) anche se citano ONU o "dialogo interculturale"; guerre e diplomazia senza attori o temi religiosi; salute e tecnologia. ' +
-          'Esempi true: parole di Papa/vescovi/rabbini/imam su qualunque tema; vita di comunità e ordini religiosi; liturgia e feste religiose; leggi e processi che toccano i culti. ' +
+          'Esempi true: parole di Papa/vescovi/rabbini/imam su qualunque tema; vita di comunità e ordini religiosi; opere di sacerdoti, religiosi e comunità di fede (parrocchie, scuole, carità), anche in zone di guerra o di crisi; liturgia e feste religiose; leggi e processi che toccano i culti. ' +
           'REGOLA FINALE: nel dubbio rispondi false — meglio escludere un caso limite che pubblicare un fuori tema. ' +
           'Rispondi SOLO con un array JSON di booleani, stesso ordine e stesso numero.\n' + JSON.stringify(voci)
         }]
@@ -2352,7 +2352,7 @@ http.createServer((req, res) => {
         const payload = {
           model: 'claude-haiku-4-5', max_tokens: 350, temperature: 0.2,
           system: 'Sei la guida di Edicola Ecclesiastica, testata digitale gratuita su Chiesa, religioni e diritto ecclesiastico. ' +
-            'Rispondi in italiano semplice, al massimo 5 frasi, SOLO su come usare la piattaforma. Non inventare funzioni che non sono elencate qui. ' +
+            'Rispondi in italiano semplice, al massimo 5 frasi, SOLO su come usare la piattaforma, in testo semplice senza formattazione markdown (niente asterischi, cancelletti o elenchi). Non inventare funzioni che non sono elencate qui. ' +
             'Per domande di merito (dottrina, diritto, casi personali) indica la sezione utile e ricorda che la piattaforma informa ma non dà pareri.\n' +
             'FUNZIONI:\n' +
             '- Notizie: 33 fonti (Vatican News, agenzie cattoliche, voci di altre confessioni, stampa internazionale), aggiornate ogni 5 minuti, tradotte in italiano. Filtri: Santa Sede, Chiesa Italia, Dir. Canonico, Stato e Chiese, Libertà religiosa, Religioni.\n' +
@@ -2369,7 +2369,9 @@ http.createServer((req, res) => {
         if (r && r.status === 200) {
           const cd = JSON.parse(r.body);
           const txt = ((cd.content || [])[0] || {}).text || '';
-          if (txt.trim()) return res.end(JSON.stringify({ ok: true, risposta: txt.trim() }));
+          // il pannello mostra testo semplice: via eventuali marcatori markdown
+          const pulito = txt.replace(/\*\*|__/g, '').replace(/^#+\s*/gm, '').replace(/^\s*[-*]\s+/gm, '').trim();
+          if (pulito) return res.end(JSON.stringify({ ok: true, risposta: pulito }));
         }
         res.end(JSON.stringify({ ok: true, risposta: GUIDA_BASE }));
       } catch (e) {
