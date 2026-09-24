@@ -272,6 +272,67 @@ function getCorpusDB() { return getCorpusBB(); }
 // ── Corpus Normativa (data/normativa.db) — leggi e decreti da Normattiva ──
 const NORMATIVA_DB_PATH = require('path').join(__dirname, 'data', 'normativa.db');
 let _normBB = null, _normBB_mtime = 0, _normDBW = null;
+// Ricerca nel corpus ecclesiastico (CIC, CCEO, leggi vaticane e italiane,
+// magistero) dei testi collegati a una notizia. Zero AI: FTS5 con soglia di
+// pertinenza per co-occorrenza — almeno due termini DISCRIMINANTI (non troppo
+// frequenti nel corpus) devono comparire nello stesso testo; un termine solo
+// basta unicamente se rarissimo. Restituisce { canoni:[...], magistero:[...] }.
+function cercaCorpusEcclesiastico(title, content) {
+  const vuoto = { canoni: [], magistero: [] };
+  try {
+    const ndb = getNormativaBB();
+    let sv2 = null; try { sv2 = require('./services/scalata-v2'); } catch (e) {}
+    if (!ndb || !sv2) return vuoto;
+    let termini = sv2.terminiChiave(title);
+    if (termini.length < 3) {
+      for (const t of sv2.terminiChiave(String(content || '').substring(0, 400))) {
+        if (!termini.includes(t)) termini.push(t);
+        if (termini.length >= 5) break;
+      }
+    }
+    if (!termini.length) return vuoto;
+    const tot = ndb.prepare('SELECT COUNT(*) AS n FROM articoli').get().n || 0;
+    if (!tot) return vuoto;
+    const dfStmt = ndb.prepare('SELECT COUNT(*) AS n FROM articoli_fts WHERE articoli_fts MATCH ?');
+    const conDf = termini.map(t => ({ t, df: (() => { try { return dfStmt.get('"' + t + '"').n || 0; } catch (e) { return 0; } })() }))
+      .filter(x => x.df >= 1 && x.df <= Math.max(40, Math.floor(tot * 0.10)));
+    let match = null;
+    if (conDf.length >= 2) {
+      const pairs = [];
+      for (let a = 0; a < conDf.length; a++)
+        for (let b = a + 1; b < conDf.length; b++)
+          pairs.push(`("${conDf[a].t}" AND "${conDf[b].t}")`);
+      match = pairs.join(' OR ');
+    } else if (conDf.length === 1 && conDf[0].df <= Math.max(5, Math.floor(tot * 0.005))) {
+      match = '"' + conDf[0].t + '"';
+    }
+    if (!match) return vuoto;
+    const rows = ndb.prepare(`
+      SELECT a.atto_urn, a.numero_articolo, t.titolo, t.tipo, t.ordinamento, t.url_fonte,
+             snippet(articoli_fts, 0, '[', ']', '…', 14) AS snip
+      FROM articoli_fts f JOIN articoli a ON a.id = f.rowid JOIN atti t ON t.urn = a.atto_urn
+      WHERE articoli_fts MATCH ? ORDER BY rank LIMIT 20
+    `).all(match);
+    const out = { canoni: [], magistero: [] }, vistiAtti = new Set();
+    for (const r of rows) {
+      const isMag = r.ordinamento === 'magistero';
+      if (isMag) { if (vistiAtti.has(r.atto_urn) || out.magistero.length >= 3) continue; vistiAtti.add(r.atto_urn); }
+      else if (out.canoni.length >= 4) continue;
+      const isCanone = /^urn:vatican:(cic|cceo)/.test(r.atto_urn);
+      const breve = String(r.titolo || r.tipo || '').replace(/\s+—\s+testo italiano$/, '');
+      const etichetta = r.numero_articolo === 'testo'
+        ? breve
+        : (isCanone ? 'Can. ' : 'Art. ') + r.numero_articolo + ' · ' + breve;
+      (isMag ? out.magistero : out.canoni).push({
+        etichetta: etichetta.length > 140 ? etichetta.slice(0, 140) + '…' : etichetta,
+        ordinamento: r.ordinamento, url: r.url_fonte || null, snippet: r.snip || '',
+      });
+      if (out.canoni.length >= 4 && out.magistero.length >= 3) break;
+    }
+    return out;
+  } catch (e) { console.warn('[Approfondimento] corpus:', e.message); return vuoto; }
+}
+
 function getNormativaBB() {
   if (!Database) return null;
   try {
@@ -2271,6 +2332,70 @@ http.createServer((req, res) => {
     res.setHeader('Content-Type','application/json');
     res.end(JSON.stringify(diverse));
 
+
+  } else if (url === '/api/approfondimento' && req.method === 'POST') {
+    // APPROFONDIMENTO INTERCONFESSIONALE — sostituisce la "scalata giuridica"
+    // ereditata dalla testata madre (norme civili + Cassazione, fuori tema qui).
+    // Blocco 1 (zero AI): canoni, leggi e magistero collegati, dal corpus.
+    // Blocco 2 (1 chiamata Haiku, cache): inquadramento, confronto tra le
+    // tradizioni religiose, spunto per un articolo di opinione.
+    let body = '';
+    req.on('data', c => body += c);
+    req.on('end', async () => {
+      res.setHeader('Content-Type', 'application/json');
+      res.setHeader('Access-Control-Allow-Origin', '*');
+      if (!scalataEnabled()) { res.writeHead(503); return res.end(JSON.stringify({ error: 'sezione in manutenzione' })); }
+      try {
+        const { id, title, content, source } = JSON.parse(body || '{}');
+        if (!title) { res.writeHead(400); return res.end(JSON.stringify({ error: 'titolo mancante' })); }
+        const corpus = cercaCorpusEcclesiastico(title, content);
+
+        let sintesi = null, sintesi_stato = 'assente';
+        const cacheKey = 'approf:v1:' + Buffer.from(String(id || title).substring(0, 90)).toString('base64url');
+        if (synthesisCache.has(cacheKey)) {
+          sintesi = synthesisCache.get(cacheKey); sintesi_stato = 'cache';
+        } else if (!ANTHROPIC_KEY) {
+          sintesi_stato = 'no_api_key';
+        } else if (!canCallClaude('scalata')) {
+          sintesi_stato = 'cap_esaurito';
+        } else {
+          const materiali = [...corpus.canoni, ...corpus.magistero]
+            .map(r => `- ${r.etichetta}: ${(r.snippet || '').replace(/[\[\]]/g, '')}`)
+            .join('\n').substring(0, 1800) || 'nessuno';
+          const payload = {
+            model: 'claude-haiku-4-5', max_tokens: 1100, temperature: 0.3,
+            system: 'Sei uno studioso di storia delle religioni e di diritto canonico ed ecclesiastico. Scrivi in italiano, con equilibrio e rispetto per ogni fede. Rispondi SOLO con JSON valido, nessun testo fuori dal JSON.',
+            messages: [{ role: 'user', content:
+              'NOTIZIA\nTitolo: ' + title + '\nFonte: ' + (source || '') + '\nTesto: ' + String(content || '').substring(0, 2200) +
+              '\n\nCANONI, LEGGI E MAGISTERO COLLEGATI (dal corpus della testata):\n' + materiali +
+              '\n\nRegole ferree:\n' +
+              '1. "inquadramento": 4-6 righe che leggono il fatto alla luce della dottrina, del diritto o della prassi della confessione protagonista. Puoi citare canoni o documenti SOLO tra quelli elencati sopra; mai inventare numeri di canoni, titoli di documenti o citazioni.\n' +
+              '2. "confronto": da 2 a 4 tradizioni religiose DIVERSE da quella protagonista per cui il tema è davvero pertinente (es. ebraismo, islam, ortodossia, protestantesimo, buddhismo, induismo). Per ciascuna 1-2 frasi sulla posizione generale e consolidata di quella tradizione sul tema. Niente citazioni testuali, niente nomi di persone o documenti. Se il tema non si presta a un confronto reale, restituisci array vuoto.\n' +
+              '3. "spunto": un possibile articolo di opinione sul fatto — "titolo" (max 12 parole) e "angolo" (max 2 frasi: la tesi o la domanda da sviluppare). Stimolante ma equilibrato, mai offensivo verso alcuna fede.\n\n' +
+              'JSON:\n{"inquadramento":"...","confronto":[{"tradizione":"...","posizione":"..."}],"spunto":{"titolo":"...","angolo":"..."}}'
+            }]
+          };
+          try {
+            let claudeRes = null, _lastErr = null;
+            for (let att = 0; att < 2 && !claudeRes; att++) { try { claudeRes = await _callClaude(payload, 20000); } catch (e) { _lastErr = e; } }
+            if (!claudeRes) throw (_lastErr || new Error('no_response'));
+            if (claudeRes.status === 200) {
+              const cd = JSON.parse(claudeRes.body);
+              const parsed = safeParseJSON((cd.content && cd.content[0] && cd.content[0].text) || '');
+              if (parsed && (parsed.inquadramento || parsed.spunto)) {
+                if (!Array.isArray(parsed.confronto)) parsed.confronto = [];
+                sintesi = parsed; sintesi_stato = 'generata';
+                synthesisCache.set(cacheKey, parsed);
+                if (synthesisCache.size > 500) synthesisCache.delete(synthesisCache.keys().next().value);
+              } else { sintesi_stato = 'parse_error'; }
+            } else { sintesi_stato = 'claude_error'; console.error('[Approfondimento] Claude status', claudeRes.status); }
+          } catch (e) { sintesi_stato = 'errore'; console.error('[Approfondimento] err:', e.message); }
+        }
+        res.end(JSON.stringify({ ok: true, canoni: corpus.canoni, magistero: corpus.magistero, sintesi, sintesi_stato }));
+      } catch (e) {
+        res.writeHead(500); res.end(JSON.stringify({ error: e.message }));
+      }
+    });
 
   } else if (url === '/api/scalata/status') {
     // Stato Scalata v2 — il frontend lo usa per mostrare/nascondere i bottoni.

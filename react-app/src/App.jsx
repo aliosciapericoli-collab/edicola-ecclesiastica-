@@ -1028,111 +1028,101 @@ function IntelligenzaGiuridicaPanel({ l6 }) {
 }
 
 // ─── ARTICLE READER PANEL ────────────────────────────────────────────
-// ─── SCALATA v2 — 3 blocchi da /api/scalata/v2 (norme + giurisprudenza + sintesi) ───
-function ScalataV2({ item }) {
+// ─── APPROFONDIMENTO INTERCONFESSIONALE — da /api/approfondimento ───
+// Canoni, leggi e magistero collegati (dal corpus, zero AI) + inquadramento,
+// confronto tra le tradizioni religiose e spunto per un articolo di opinione
+// (1 chiamata AI, in cache). Si apre su richiesta: niente costi a ogni lettura.
+function ApprofondimentoInterconfessionale({ item }) {
   const [data, setData] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [off, setOff] = useState(false);
+  const [errore, setErrore] = useState(false);
 
-  useEffect(() => {
-    let alive = true;
-    setLoading(true); setOff(false); setData(null);
-    fetch(API + '/api/scalata/v2', {
+  useEffect(() => { setData(null); setLoading(false); setErrore(false); }, [item]);
+
+  const apri = () => {
+    if (loading || data) return;
+    setLoading(true); setErrore(false);
+    fetch(API + '/api/approfondimento', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         id: item.id, title: item.title,
-        content: item.full_text || item.desc || item.snippet || item.l1_fatto || '',
-        source: item.source || item.source_name || '', url: item.url || item.link || '',
-        category: item.category || item.area_diritto || '',
+        content: item.full_text || item.desc || item.snippet || '',
+        source: item.source || item.source_name || '',
       }),
     })
-      .then(r => { if (r.status === 503) { if (alive) setOff(true); return null; } return r.json(); })
-      .then(d => { if (!alive) return; if (d) setData(d); setLoading(false); })
-      .catch(() => { if (alive) setLoading(false); });
-    return () => { alive = false; };
-  }, [item]);
-
-  if (off) return null; // Scalata disabilitata → nessun pannello (niente funzioni spente a schermo)
-
-  const apriNorma = (n) => {
-    if (!n.risolto || !n.codice_id) return;
-    window.__pendingNormaArticolo = { codice_id: n.codice_id, numero: n.numero, codice_nome: n.fonte };
-    document.dispatchEvent(new CustomEvent('eg:navigateTo', { detail: { tab: 'norme' } }));
-    setTimeout(() => document.dispatchEvent(new CustomEvent('eg:openNormaArticolo', { detail: window.__pendingNormaArticolo })), 90);
+      .then(r => { if (r.status === 503) { setOff(true); return null; } return r.json(); })
+      .then(d => { if (d && d.ok) setData(d); else if (d) setErrore(true); setLoading(false); })
+      .catch(() => { setErrore(true); setLoading(false); });
   };
 
-  const H = ({ n, children }) => (
-    <div style={{ fontSize: 10.5, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--eg-text-muted)', margin: '16px 0 8px' }}>
-      {children}{n != null && <span style={{ color: 'var(--eg-accent)', marginLeft: 6 }}>{n}</span>}
+  if (off) return null;
+
+  const H = ({ children }) => (
+    <div style={{ fontSize: 10.5, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--eg-text-muted)', margin: '18px 0 8px' }}>{children}</div>
+  );
+  const Fonte = ({ r }) => (
+    <div style={{ padding: '10px 12px', border: '1px solid var(--eg-border)', borderRadius: 8, background: 'var(--eg-surface)' }}>
+      <div style={{ fontSize: 12.5, fontWeight: 700, color: 'var(--eg-text)' }}>{r.etichetta}</div>
+      {r.snippet && <div style={{ fontSize: 11.5, color: 'var(--eg-text-muted)', lineHeight: 1.5, marginTop: 3 }}
+        dangerouslySetInnerHTML={{ __html: String(r.snippet).replace(/</g, '&lt;').replace(/\[/g, '<mark style="background:rgba(200,169,110,0.35);color:inherit">').replace(/\]/g, '</mark>') }} />}
+      {r.url && <a href={r.url} target="_blank" rel="noopener noreferrer" style={{ fontSize: 10.5, color: 'var(--eg-accent)', textDecoration: 'none' }}>Testo ufficiale ↗</a>}
     </div>
   );
 
+  const s = data && data.sintesi;
+  const nFonti = data ? data.canoni.length + data.magistero.length : 0;
+
   return (
     <div style={{ padding: '18px 24px 24px' }}>
-      <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--eg-text)' }}>▲ Scalata giuridica</div>
-      <div style={{ fontSize: 11.5, color: 'var(--eg-text-muted)', marginTop: 2 }}>Norme citate, giurisprudenza correlata e sintesi — solo da fonti ufficiali.</div>
+      <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--eg-text)' }}>✦ Approfondimento interconfessionale</div>
+      <div style={{ fontSize: 11.5, color: 'var(--eg-text-muted)', marginTop: 2 }}>Canoni e magistero collegati, confronto tra le tradizioni religiose e uno spunto per un commento.</div>
 
-      {loading && <div style={{ fontSize: 12, color: 'var(--eg-text-dim)', marginTop: 14 }}>Analisi in corso…</div>}
-
-      {data && data.agganci === false && (
-        <div style={{ marginTop: 16, padding: '14px 16px', background: 'var(--eg-surface)', border: '1px solid var(--eg-border)', borderRadius: 8 }}>
-          <div style={{ fontSize: 12.5, fontWeight: 700, color: 'var(--eg-text)', marginBottom: 4 }}>Questa notizia non ha agganci giuridici diretti</div>
-          <div style={{ fontSize: 11.5, color: 'var(--eg-text-muted)', lineHeight: 1.55 }}>
-            Non sono state rilevate norme citate né una giurisprudenza chiaramente pertinente. La scalata giuridica si attiva sulle notizie con un contenuto normativo o processuale riconoscibile.
-          </div>
-        </div>
+      {!data && (
+        <button onClick={apri} disabled={loading}
+          style={{ marginTop: 14, background: 'var(--eg-accent)', border: 'none', borderRadius: 7, padding: '9px 16px', color: '#1a1a1a', fontSize: 13, fontWeight: 700, cursor: loading ? 'default' : 'pointer', opacity: loading ? 0.7 : 1 }}>
+          {loading ? 'Approfondimento in corso…' : 'Apri l’approfondimento'}
+        </button>
       )}
+      {errore && <div style={{ fontSize: 12, color: 'var(--eg-text-muted)', marginTop: 10 }}>Approfondimento non disponibile al momento, riprova tra poco.</div>}
 
-      {data && data.agganci !== false && (
+      {data && (
         <>
-          {/* BLOCCO 1 — NORME CITATE */}
-          <H n={data.norme.length}>Norme citate</H>
-          {data.norme.length === 0
-            ? <div style={{ fontSize: 12, color: 'var(--eg-text-dim)' }}>Nessun riferimento normativo esplicito rilevato.</div>
-            : <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-                {data.norme.map((n, i) => n.risolto ? (
-                  <button key={i} onClick={() => apriNorma(n)} title={n.titolo || ''}
-                    style={{ fontSize: 11.5, padding: '4px 10px', borderRadius: 12, background: 'var(--eg-accent)', border: 'none', color: '#000', fontWeight: 700, cursor: 'pointer' }}>
-                    {n.ref}{n.fonte ? ' · ' + (n.fonte.length > 22 ? n.fonte.slice(0, 22) + '…' : n.fonte) : ''}
-                  </button>
-                ) : (
-                  <span key={i} style={{ fontSize: 11.5, padding: '4px 10px', borderRadius: 12, background: 'var(--eg-surface-hover)', border: '1px solid var(--eg-border)', color: 'var(--eg-text-muted)' }}>
-                    {n.ref}
-                  </span>
-                ))}
-              </div>}
+          {nFonti > 0 && data.canoni.length > 0 && (<><H>Canoni e norme collegati</H>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>{data.canoni.map((r, i) => <Fonte key={'c' + i} r={r} />)}</div></>)}
+          {nFonti > 0 && data.magistero.length > 0 && (<><H>Magistero collegato</H>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>{data.magistero.map((r, i) => <Fonte key={'m' + i} r={r} />)}</div></>)}
 
-          {/* BLOCCO 2 — GIURISPRUDENZA CORRELATA */}
-          <H n={data.giurisprudenza.length}>Giurisprudenza correlata</H>
-          {data.giurisprudenza.length === 0
-            ? <div style={{ fontSize: 12, color: 'var(--eg-text-dim)' }}>Nessuna sentenza correlata trovata.</div>
-            : <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                {data.giurisprudenza.map((s, i) => (
-                  <div key={i} style={{ padding: '10px 12px', border: '1px solid var(--eg-border)', borderRadius: 8, background: 'var(--eg-surface)' }}>
-                    <div onClick={() => document.dispatchEvent(new CustomEvent('eg:openSentenza', { detail: { id: s.id, url: s.url } }))}
-                      style={{ fontSize: 12.5, fontWeight: 700, color: 'var(--eg-text)', cursor: 'pointer' }}>
-                      {s.titolo}{s.data ? <span style={{ fontWeight: 400, color: 'var(--eg-text-dim)' }}> · {s.data}</span> : null}
+          {s ? (
+            <>
+              {s.inquadramento && (<><H>Inquadramento</H>
+                <div style={{ fontSize: 12.5, color: 'var(--eg-text)', lineHeight: 1.65 }}>{s.inquadramento}</div></>)}
+
+              {Array.isArray(s.confronto) && s.confronto.length > 0 && (<><H>Confronto tra le tradizioni</H>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  {s.confronto.map((c, i) => (
+                    <div key={i} style={{ fontSize: 12.5, color: 'var(--eg-text)', lineHeight: 1.6 }}>
+                      <strong style={{ color: 'var(--eg-accent)' }}>{c.tradizione}. </strong>{c.posizione}
                     </div>
-                    {s.snippet && <div style={{ fontSize: 11.5, color: 'var(--eg-text-muted)', lineHeight: 1.5, marginTop: 3 }}
-                      dangerouslySetInnerHTML={{ __html: (s.snippet || '').replace(/\[/g, '<mark style="background:rgba(200,169,110,0.35);color:inherit">').replace(/\]/g, '</mark>') }} />}
-                    {s.url && <a href={s.url} target="_blank" rel="noopener noreferrer" style={{ fontSize: 10.5, color: 'var(--eg-accent)', textDecoration: 'none' }}>PDF ufficiale ↗</a>}
-                  </div>
-                ))}
-              </div>}
+                  ))}
+                </div></>)}
 
-          {/* BLOCCO 3 — SINTESI GIURIDICA */}
-          <H>Sintesi giuridica</H>
-          {data.sintesi ? (
-            <div style={{ fontSize: 12.5, color: 'var(--eg-text)', lineHeight: 1.65 }}>
-              {data.sintesi.inquadramento && <p style={{ marginBottom: 10 }}>{data.sintesi.inquadramento}</p>}
-              {data.sintesi.principio_diritto && <p style={{ marginBottom: 10 }}><strong style={{ color: 'var(--eg-accent)' }}>Principio di diritto. </strong>{data.sintesi.principio_diritto}</p>}
-              {data.sintesi.cosa_cambia && <p><strong style={{ color: 'var(--eg-accent)' }}>Cosa cambia. </strong>{data.sintesi.cosa_cambia}</p>}
-            </div>
+              {s.spunto && (s.spunto.titolo || s.spunto.angolo) && (<><H>Spunto per un articolo di opinione</H>
+                <div style={{ padding: '12px 14px', borderRadius: 8, background: 'rgba(200,169,110,0.10)', border: '1px solid var(--eg-border)' }}>
+                  {s.spunto.titolo && <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--eg-text)', marginBottom: 4 }}>{s.spunto.titolo}</div>}
+                  {s.spunto.angolo && <div style={{ fontSize: 12.5, color: 'var(--eg-text-muted)', lineHeight: 1.6 }}>{s.spunto.angolo}</div>}
+                </div></>)}
+
+              <div style={{ fontSize: 10.5, color: 'var(--eg-text-dim)', marginTop: 14, lineHeight: 1.5 }}>
+                Inquadramento, confronto e spunto sono generati con intelligenza artificiale: offrono una lettura generale, non citazioni di fonti. Da verificare prima di pubblicare.
+              </div>
+            </>
           ) : (
-            <div style={{ fontSize: 12, color: 'var(--eg-text-muted)', padding: '10px 12px', background: 'rgba(200,169,110,0.10)', borderRadius: 8 }}>
+            <div style={{ fontSize: 12, color: 'var(--eg-text-muted)', padding: '10px 12px', background: 'rgba(200,169,110,0.10)', borderRadius: 8, marginTop: 16 }}>
               {data.sintesi_stato === 'cap_esaurito'
-                ? '⏳ La sintesi AI ha raggiunto il limite giornaliero: riprende domani. Norme e giurisprudenza qui sopra restano disponibili.'
-                : 'Sintesi AI non disponibile al momento. Norme e giurisprudenza restano consultabili.'}
+                ? '⏳ L’approfondimento AI ha raggiunto il limite giornaliero: riprende domani.'
+                : 'Approfondimento AI non disponibile al momento.'}
+              {nFonti > 0 ? ' I testi del corpus qui sopra restano consultabili.' : ''}
             </div>
           )}
         </>
@@ -1506,9 +1496,9 @@ function ArticleReaderPanel({ item, onClose, onOpenArticolo }) {
           return <IntelligenzaGiuridicaPanel l6={l6} />;
         })()}
 
-        {/* ── SCALATA v2 (norme + giurisprudenza + sintesi) ── */}
+        {/* ── APPROFONDIMENTO INTERCONFESSIONALE (canoni + magistero + confronto + spunto) ── */}
         <div style={{ borderTop:`2px solid var(--eg-border)`, background:"var(--eg-surface)" }}>
-          <ScalataV2 item={item} onOpenArticolo={onOpenArticolo} />
+          <ApprofondimentoInterconfessionale item={item} />
         </div>
 
       {pannelloSentenzaId && <PannelloSentenza id={pannelloSentenzaId} onClose={() => setPannelloSentenzaId(null)} />}
@@ -8696,11 +8686,11 @@ export default function EdicolaGiuridica() {
           onMouseEnter={e => e.currentTarget.style.background="rgba(200,169,110,0.15)"}
           onMouseLeave={e => e.currentTarget.style.background="rgba(200,169,110,0.08)"}
           >
-            ⚖️ Strumento di supporto alla ricerca giuridica. Non sostituisce il parere professionale. Supervisione umana sempre necessaria. <span style={{ color:"var(--eg-accent)", textDecoration:"underline" }}>Avvertenze</span>
+            ✦ Strumento di informazione e studio su Chiesa, religioni e diritto ecclesiastico. I contenuti generati con AI vanno sempre verificati. <span style={{ color:"var(--eg-accent)", textDecoration:"underline" }}>Avvertenze</span>
           </div>
           {/* Copyright */}
           <div style={{ padding:"8px 20px", textAlign:"center", fontSize:10, color:"var(--eg-text-dim)" }}>
-            © 2026 Edicola Ecclesiastica — Intelligence giuridica italiana · <a href="/manifesto" style={{ color:"var(--eg-accent)", textDecoration:"none" }}>Manifesto</a>
+            © 2026 Edicola Ecclesiastica — Chiesa, religioni e diritto ecclesiastico · <a href="/manifesto" style={{ color:"var(--eg-accent)", textDecoration:"none" }}>Manifesto</a>
           </div>
         </footer>
 
