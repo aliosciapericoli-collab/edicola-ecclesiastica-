@@ -2333,6 +2333,50 @@ http.createServer((req, res) => {
     res.end(JSON.stringify(diverse));
 
 
+  } else if (url === '/api/help/chat' && req.method === 'POST') {
+    // GUIDA — assistente d'uso della piattaforma (il pannello "Guida" lo
+    // chiamava ma l'endpoint mancava: ogni domanda finiva in errore).
+    let body = '';
+    req.on('data', c => { body += c; if (body.length > 20000) req.destroy(); });
+    req.on('end', async () => {
+      res.setHeader('Content-Type', 'application/json');
+      res.setHeader('Access-Control-Allow-Origin', '*');
+      const GUIDA_BASE = 'Edicola Ecclesiastica raccoglie ogni 5 minuti le notizie di 33 fonti su Chiesa e religioni, traducendo in italiano quelle straniere. ' +
+        'Dal menu trovi il corpus: Dir. Canonico (CIC e CCEO), Stato e Chiese (Patti Lateranensi e intese), Leggi Vaticane, Magistero. ' +
+        'Sotto ogni notizia c\'è l\'Approfondimento interconfessionale; su ogni canone il tasto Analisi AI.';
+      try {
+        const { domanda } = JSON.parse(body || '{}');
+        const q = String(domanda || '').trim().substring(0, 500);
+        if (!q) return res.end(JSON.stringify({ ok: false, errore: 'Scrivi una domanda.' }));
+        if (!ANTHROPIC_KEY || !canCallClaude('other')) return res.end(JSON.stringify({ ok: true, risposta: GUIDA_BASE }));
+        const payload = {
+          model: 'claude-haiku-4-5', max_tokens: 350, temperature: 0.2,
+          system: 'Sei la guida di Edicola Ecclesiastica, testata digitale gratuita su Chiesa, religioni e diritto ecclesiastico. ' +
+            'Rispondi in italiano semplice, al massimo 5 frasi, SOLO su come usare la piattaforma. Non inventare funzioni che non sono elencate qui. ' +
+            'Per domande di merito (dottrina, diritto, casi personali) indica la sezione utile e ricorda che la piattaforma informa ma non dà pareri.\n' +
+            'FUNZIONI:\n' +
+            '- Notizie: 33 fonti (Vatican News, agenzie cattoliche, voci di altre confessioni, stampa internazionale), aggiornate ogni 5 minuti, tradotte in italiano. Filtri: Santa Sede, Chiesa Italia, Dir. Canonico, Stato e Chiese, Libertà religiosa, Religioni.\n' +
+            '- Aprendo una notizia straniera: tasto "Traduci articolo in italiano" per il testo completo; "Mostra originale" per tornare alla lingua di partenza.\n' +
+            '- Sotto ogni notizia: "Approfondimento interconfessionale" (si apre col bottone) con canoni e magistero collegati, inquadramento, confronto tra le tradizioni religiose e uno spunto per un articolo di opinione.\n' +
+            '- Menu del corpus: Dir. Canonico (Codice di Diritto Canonico 1983 e Codice dei Canoni delle Chiese Orientali 1990), Stato e Chiese (Patti Lateranensi, Accordo di Villa Madama, intese con le confessioni, leggi italiane), Leggi Vaticane (leggi e decreti dello Stato della Città del Vaticano, compreso il codice penale vaticano), Magistero (encicliche, motu proprio, costituzioni ed esortazioni apostoliche, Concilio Vaticano II). Ogni sezione ha una casella di ricerca; aprendo un canone o un articolo c\'è il tasto "Analisi AI" che lo spiega in parole semplici.\n' +
+            '- Barra di ricerca in alto: cerca insieme nelle notizie e nel corpus.\n' +
+            '- Si può installare come app dal browser (tasto Installa o "Aggiungi a schermata Home").\n' +
+            '- Il Manifesto spiega chi siamo e mostra i numeri aggiornati.',
+          messages: [{ role: 'user', content: q }]
+        };
+        let r = null;
+        try { r = await _callClaude(payload, 15000); } catch (e) {}
+        if (r && r.status === 200) {
+          const cd = JSON.parse(r.body);
+          const txt = ((cd.content || [])[0] || {}).text || '';
+          if (txt.trim()) return res.end(JSON.stringify({ ok: true, risposta: txt.trim() }));
+        }
+        res.end(JSON.stringify({ ok: true, risposta: GUIDA_BASE }));
+      } catch (e) {
+        res.end(JSON.stringify({ ok: false, errore: 'Domanda non leggibile, riprova.' }));
+      }
+    });
+
   } else if (url === '/api/approfondimento' && req.method === 'POST') {
     // APPROFONDIMENTO INTERCONFESSIONALE — sostituisce la "scalata giuridica"
     // ereditata dalla testata madre (norme civili + Cassazione, fuori tema qui).
@@ -3635,13 +3679,13 @@ http.createServer((req, res) => {
 
         const payload = {
           model: 'claude-haiku-4-5', max_tokens: 700, temperature: 0.2,
-          system: 'Sei un docente di diritto italiano: spieghi gli articoli di legge in modo piano e accessibile. Rispondi SOLO con JSON valido, nessun testo fuori dal JSON. Usa ESCLUSIVAMENTE le informazioni fornite; non inventare norme o sentenze. Niente latino non tradotto.',
+          system: 'Sei un docente di diritto canonico ed ecclesiastico: spieghi canoni, leggi e documenti della Chiesa in modo piano e accessibile. Rispondi SOLO con JSON valido, nessun testo fuori dal JSON. Usa ESCLUSIVAMENTE le informazioni fornite; non inventare canoni, norme o documenti. Niente latino non tradotto.',
           messages: [{ role: 'user', content:
             'ARTICOLO\nCodice: ' + art.codice_id + '\nArticolo: ' + art.numero + '\nTitolo: ' + (art.titolo || '') +
             '\nTesto:\n' + String(art.testo || '').substring(0, 1500) +
             (notizieTxt ? '\n\nNOTIZIE CORRELATE:\n' + notizieTxt : '') +
-            (sentTxt ? '\n\nGIURISPRUDENZA CORRELATA:\n' + sentTxt : '') +
-            '\n\nProduci questo JSON:\n{"spiegazione":"spiegazione piana dell\'articolo in 5-8 righe, linguaggio accessibile","ambito":"ambito di applicazione: a chi e a cosa si applica, 1-2 righe","giurisprudenza":"orientamento giurisprudenziale rilevante SOLO se emerge dai materiali forniti, altrimenti stringa vuota"}'
+            
+            '\n\nProduci questo JSON:\n{"spiegazione":"spiegazione piana dell\'articolo in 5-8 righe, linguaggio accessibile","ambito":"ambito di applicazione: a chi e a cosa si applica, 1-2 righe","giurisprudenza":"interpretazione o prassi rilevante SOLO se emerge dal testo fornito, altrimenti stringa vuota"}'
           }]
         };
         let claudeRes = null, lastErr = null;
@@ -3929,12 +3973,12 @@ http.createServer((req, res) => {
 
         const payload = {
           model: 'claude-haiku-4-5', max_tokens: 700, temperature: 0.2,
-          system: 'Sei un docente di diritto italiano: spieghi gli articoli di legge in modo piano e accessibile. Rispondi SOLO con JSON valido, nessun testo fuori dal JSON. Usa ESCLUSIVAMENTE le informazioni fornite; non inventare norme o sentenze. Niente latino non tradotto.',
+          system: 'Sei un docente di diritto canonico ed ecclesiastico: spieghi canoni, leggi e documenti della Chiesa in modo piano e accessibile. Rispondi SOLO con JSON valido, nessun testo fuori dal JSON. Usa ESCLUSIVAMENTE le informazioni fornite; non inventare canoni, norme o documenti. Niente latino non tradotto.',
           messages: [{ role: 'user', content:
             'ARTICOLO\nAtto: ' + (art.atto_titolo || '') + '\nArticolo: ' + art.numero_articolo + '\nRubrica: ' + (art.rubrica || '') +
             '\nTesto:\n' + String(art.testo_vigente || '').substring(0, 1500) +
-            (sentTxt ? '\n\nGIURISPRUDENZA CORRELATA:\n' + sentTxt : '') +
-            '\n\nProduci questo JSON:\n{"spiegazione":"spiegazione piana dell\'articolo in 5-8 righe, linguaggio accessibile","ambito":"ambito di applicazione: a chi e a cosa si applica, 1-2 righe","giurisprudenza":"orientamento giurisprudenziale rilevante SOLO se emerge dai materiali forniti, altrimenti stringa vuota"}'
+            
+            '\n\nProduci questo JSON:\n{"spiegazione":"spiegazione piana dell\'articolo in 5-8 righe, linguaggio accessibile","ambito":"ambito di applicazione: a chi e a cosa si applica, 1-2 righe","giurisprudenza":"interpretazione o prassi rilevante SOLO se emerge dal testo fornito, altrimenti stringa vuota"}'
           }]
         };
         let claudeRes = null, lastErr = null;
@@ -4159,7 +4203,7 @@ http.createServer((req, res) => {
       + '<script type="application/ld+json">{"@context":"https://schema.org","@type":"NewsMediaOrganization","name":"Edicola Ecclesiastica","url":"https://edicolaecclesiastica.com/","publishingPrinciples":"https://edicolaecclesiastica.com/manifesto"}</script>\n'
       + '</head>\n<body>\n'
       + '<header><h1>Edicola Ecclesiastica \u2014 Notizie Scalabili</h1>'
-      + '<p>Il primo aggregatore con 6 livelli di comprensione per ogni notizia. <a href="/manifesto">Il Manifesto</a></p></header>\n'
+      + '<p>Notizie su Chiesa e religioni, con il corpus del diritto canonico ed ecclesiastico. <a href="/manifesto">Il Manifesto</a></p></header>\n'
       + '<main>\n<h2>Ultime notizie (' + arts.length + ' articoli)</h2>\n'
       + artHtml
       + '\n</main>\n'

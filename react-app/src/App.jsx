@@ -1484,18 +1484,6 @@ function ArticleReaderPanel({ item, onClose, onOpenArticolo }) {
 
         {/* ── CASI SIMILI — rimosso dalla vista (componente ed endpoint restano in piedi) ── */}
 
-        {/* ── INTELLIGENZA GIURIDICA (L6) ── */}
-        {item.scalata_l6 && (() => {
-          let l6;
-          try { l6 = typeof item.scalata_l6 === 'string' ? JSON.parse(item.scalata_l6) : item.scalata_l6; } catch(e) { return null; }
-          const strategy = l6?.strategy || [];
-          const collisions = l6?.collisions || [];
-          const crossAreas = l6?.cross_areas || [];
-          const chains = l6?.chains || [];
-          if (!strategy.length && !collisions.length && !crossAreas.length && !chains.length) return null;
-          return <IntelligenzaGiuridicaPanel l6={l6} />;
-        })()}
-
         {/* ── APPROFONDIMENTO INTERCONFESSIONALE (canoni + magistero + confronto + spunto) ── */}
         <div style={{ borderTop:`2px solid var(--eg-border)`, background:"var(--eg-surface)" }}>
           <ApprofondimentoInterconfessionale item={item} />
@@ -1646,7 +1634,7 @@ function ArticoloPanel({ codiceId, numero, onClose }) {
                 </div>
                 <div style={{ fontSize: 13, color: "var(--eg-text)", lineHeight: 1.7 }}>{analisiMostrata.spiegazione}</div>
                 {analisiMostrata.ambito && <div style={{ fontSize: 12, color: "var(--eg-text-muted)", lineHeight: 1.6, marginTop: 10 }}><strong style={{ color: "var(--eg-text-muted)" }}>Ambito di applicazione. </strong>{analisiMostrata.ambito}</div>}
-                {analisiMostrata.giurisprudenza && <div style={{ fontSize: 12, color: "var(--eg-text-muted)", lineHeight: 1.6, marginTop: 8 }}><strong style={{ color: "var(--eg-text-muted)" }}>Giurisprudenza. </strong>{analisiMostrata.giurisprudenza}</div>}
+                {analisiMostrata.giurisprudenza && <div style={{ fontSize: 12, color: "var(--eg-text-muted)", lineHeight: 1.6, marginTop: 8 }}><strong style={{ color: "var(--eg-text-muted)" }}>Interpretazione. </strong>{analisiMostrata.giurisprudenza}</div>}
                 <div style={{ fontSize: 10, color: "var(--eg-text-dim)", fontStyle: "italic", marginTop: 10 }}>Analisi generata da AI su fonti documentali. Non sostituisce il parere legale.</div>
               </div>
             ) : analisiLoading ? (
@@ -4534,7 +4522,7 @@ function PageNorme() {
                   <div style={{ fontSize: 11, color: 'var(--eg-text-dim)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8 }}>Analisi AI</div>
                   {analisi.spiegazione && <div style={{ fontSize: 14, lineHeight: 1.7, color: 'var(--eg-text)', whiteSpace: 'pre-wrap', marginBottom: analisi.ambito || analisi.giurisprudenza ? 12 : 0 }}>{analisi.spiegazione}</div>}
                   {analisi.ambito && <div style={{ fontSize: 13, lineHeight: 1.6, color: 'var(--eg-text-muted)', marginBottom: analisi.giurisprudenza ? 10 : 0 }}><strong style={{ color: 'var(--eg-text)' }}>Ambito. </strong>{analisi.ambito}</div>}
-                  {analisi.giurisprudenza && <div style={{ fontSize: 13, lineHeight: 1.6, color: 'var(--eg-text-muted)' }}><strong style={{ color: 'var(--eg-text)' }}>Giurisprudenza. </strong>{analisi.giurisprudenza}</div>}
+                  {analisi.giurisprudenza && <div style={{ fontSize: 13, lineHeight: 1.6, color: 'var(--eg-text-muted)' }}><strong style={{ color: 'var(--eg-text)' }}>Interpretazione. </strong>{analisi.giurisprudenza}</div>}
                 </>
               )}
             </div>
@@ -5662,21 +5650,21 @@ function DisclaimerPopup({ onClose }) {
       }}>
         {/* Header */}
         <div style={{ padding:"18px 22px 14px", borderBottom:"1px solid var(--eg-border)", flexShrink:0 }}>
-          <div style={{ fontSize:11, fontWeight:700, color:"var(--eg-accent)", textTransform:"uppercase", letterSpacing:"0.1em", marginBottom:4 }}>⚖️ Avvertenze legali</div>
+          <div style={{ fontSize:11, fontWeight:700, color:"var(--eg-accent)", textTransform:"uppercase", letterSpacing:"0.1em", marginBottom:4 }}>✦ Avvertenze</div>
           <div style={{ fontSize:16, fontWeight:700, color:"var(--eg-text)", lineHeight:1.3 }}>Avvertenze sull'uso di Edicola Ecclesiastica</div>
         </div>
         {/* Corpo scrollabile */}
         <div style={{ padding:"18px 22px", overflowY:"auto", flex:1, fontSize:13, color:"var(--eg-text)", lineHeight:1.65 }}>
           <p style={{ marginTop:0 }}>
-            Edicola Ecclesiastica utilizza sistemi di intelligenza artificiale per l'analisi, la classificazione e il collegamento di fonti giuridiche.
-            In conformità con le <strong>Raccomandazioni del Consiglio Superiore della Magistratura sull'uso dell'intelligenza artificiale nell'amministrazione della giustizia</strong> (8 ottobre 2025), si raccomanda:
+            Edicola Ecclesiastica utilizza sistemi di intelligenza artificiale per tradurre, classificare e collegare notizie e testi del diritto della Chiesa.
+            Per un uso consapevole ricordiamo:
           </p>
           {[
-            ["1. Supervisione umana", "L'intelligenza artificiale è uno strumento di supporto alla ricerca e all'analisi. Ogni output deve essere verificato da un professionista qualificato prima di qualsiasi utilizzo in sede processuale o consulenziale."],
-            ["2. Verificabilità delle fonti", "Le notizie, le sentenze e le analisi presentate sono estratte da fonti pubbliche e banche dati ufficiali. È responsabilità dell'utente verificare l'attualità e la completezza delle informazioni presso le fonti originali (Normattiva, ItalgiureWeb, Gazzetta Ufficiale)."],
-            ["3. Limiti dell'analisi automatica", "I livelli di Scalata (L0-L7) utilizzano algoritmi di pattern matching e modelli linguistici che possono produrre errori, omissioni o correlazioni imprecise. Le classificazioni, i contrasti giurisprudenziali e i gap normativi identificati sono indicazioni automatiche, non valutazioni giuridiche."],
-            ["4. Dati personali", "Edicola Ecclesiastica non raccoglie dati personali degli utenti. Le sentenze pubblicate sono tratte da archivi pubblici nel rispetto della normativa sulla protezione dei dati."],
-            ["5. Non citabilità in atti", "I contenuti generati dall'intelligenza artificiale di Edicola Ecclesiastica non sono citabili come fonti in atti giudiziari o pareri legali. Fare sempre riferimento alla fonte primaria."],
+            ["1. Lettura umana sempre", "L'intelligenza artificiale è uno strumento di supporto alla lettura e allo studio. Traduzioni, analisi e approfondimenti vanno verificati prima di essere citati o pubblicati."],
+            ["2. Verificabilità delle fonti", "Le notizie e i testi del corpus provengono da fonti pubbliche e ufficiali: vatican.va, vaticanstate.va, Normattiva, le agenzie e le testate indicate su ogni articolo. Per l'uso ufficiale fa fede sempre il testo originale, raggiungibile dal link della fonte."],
+            ["3. Limiti dell'analisi automatica", "Classificazioni, collegamenti tra notizie e canoni, confronti tra le tradizioni religiose e spunti editoriali sono prodotti automaticamente: possono contenere errori, omissioni o semplificazioni, e offrono una lettura generale, non la posizione ufficiale di alcuna confessione."],
+            ["4. Dati personali", "Edicola Ecclesiastica non raccoglie dati personali degli utenti. I testi pubblicati provengono da fonti pubbliche."],
+            ["5. Rispetto per ogni fede", "La testata informa su tutte le confessioni con metodo laico e rispetto. I contenuti generati dall'intelligenza artificiale non sono dichiarazioni dottrinali né pareri: per questioni di coscienza o canoniche rivolgersi alle autorità e ai professionisti competenti."],
           ].map(([titolo, testo]) => (
             <div key={titolo} style={{ marginBottom:14, padding:"10px 14px", background:"var(--eg-surface-hover)", borderRadius:8, borderLeft:"3px solid var(--eg-accent)" }}>
               <div style={{ fontWeight:700, color:"var(--eg-accent)", marginBottom:4, fontSize:12 }}>{titolo}</div>
@@ -7864,7 +7852,7 @@ function PageManifesto() {
       <div style={S.card}>
         <div style={S.label}>Chi siamo</div>
         <p style={S.body}>
-          Edicola Ecclesiastica è un progetto italiano indipendente, laico nel metodo e rigoroso nelle fonti. Aggreghiamo, traduciamo e colleghiamo: notizie su Chiesa e religioni, i codici del diritto canonico, le leggi vaticane, le intese tra lo Stato e le confessioni, la giurisprudenza ecclesiastica.
+          Edicola Ecclesiastica è un progetto italiano indipendente, laico nel metodo e rigoroso nelle fonti. Aggreghiamo, traduciamo e colleghiamo: notizie su Chiesa e religioni, i codici del diritto canonico, le leggi vaticane, le intese tra lo Stato e le confessioni, il magistero pontificio.
         </p>
         <p style={{ ...S.muted, marginBottom:12 }}>
           Non vendiamo consulenze, né legali né canoniche. Costruiamo strumenti per canonisti, ecclesiasticisti, giornalisti religiosi, operatori pastorali — e per chiunque voglia capire il rapporto tra fede e diritto.
@@ -7876,9 +7864,9 @@ function PageManifesto() {
 
       {/* ══ AVVERTENZE ══ */}
       <div style={{ ...S.card, border:"1px solid var(--eg-accent-dim)", background:"rgba(200,169,110,0.04)", marginBottom:0 }}>
-        <div style={{ fontSize:11, color:"var(--eg-accent)", fontWeight:700, marginBottom:10, textTransform:"uppercase", letterSpacing:"0.12em" }}>⚖️ Avvertenze legali</div>
+        <div style={{ fontSize:11, color:"var(--eg-accent)", fontWeight:700, marginBottom:10, textTransform:"uppercase", letterSpacing:"0.12em" }}>✦ Avvertenze</div>
         <p style={{ fontSize:13, color:"var(--eg-text)", lineHeight:1.7, margin:"0 0 10px 0" }}>
-          I contenuti prodotti dal sistema AI — analisi e sintesi — sono elaborazioni automatiche e possono contenere errori. Nessun contenuto costituisce consulenza legale: la supervisione umana è sempre necessaria.
+          I contenuti prodotti dal sistema AI — analisi e sintesi — sono elaborazioni automatiche e possono contenere errori. Nessun contenuto costituisce consulenza legale o canonica, né posizione ufficiale di alcuna confessione: la lettura umana è sempre necessaria.
         </p>
         <button onClick={() => window.__disclaimerOpen && window.__disclaimerOpen()} style={{
           background:"transparent", border:"1px solid var(--eg-accent)", color:"var(--eg-accent)",
@@ -8308,7 +8296,7 @@ function AssistenteEG() {
             flexShrink: 0,
           }}>
             <span style={{ fontSize: 13, fontWeight: 700, color: C.accent, letterSpacing: '0.04em' }}>
-              Assistente EG
+              Assistente
             </span>
             <button
               onClick={() => setAperto(false)}
